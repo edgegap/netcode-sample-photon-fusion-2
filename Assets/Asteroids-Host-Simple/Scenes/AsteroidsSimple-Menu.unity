@@ -530,6 +530,7 @@ MonoBehaviour:
   _roomName: {fileID: 1722930507}
   _gameSceneName: AsteroidsSimple-Game
   _EdgegapConnectStatus: {fileID: 646237189}
+  _EdgegapStartBtn: {fileID: 638978337}
 --- !u!1001 &495451559
 PrefabInstance:
   m_ObjectHideFlags: 0

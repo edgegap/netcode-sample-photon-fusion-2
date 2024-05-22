@@ -43,7 +43,7 @@ namespace Asteroids.HostSimple
         public static string GetRandomNickName()
         {
             var rngPlayerNumber = Random.Range(0, 9999);
-            return $"Player {rngPlayerNumber.ToString("0000")}";
+            return $"player{rngPlayerNumber.ToString("0000")}";
         }
 
         public void SetIpAddress(string ip)

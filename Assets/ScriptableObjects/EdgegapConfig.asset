@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eec5a1f77fbb61a459e2b4840198588b, type: 3}
   m_Name: EdgegapConfig
   m_EditorClassIdentifier: 
-  AppName: 
-  Version: 
-  ApiToken: 
+  AppName: APP_NAME
+  Version: APP_VERSION
+  ApiToken: TOKEN_XXXX
   ApiEndpoint: https://api.edgegap.com

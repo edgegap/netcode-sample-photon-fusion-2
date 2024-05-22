@@ -16,7 +16,7 @@ namespace Asteroids.HostSimple
         public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
         {
             // When the local NetworkRunner has shut down, the menu scene is loaded.
-            if (!EdgegapManager.EdgegapPreServerMode)
+            if (!EdgegapManager.EdgegapPreServerMode || SceneManager.GetActiveScene().name != _menuSceneName)
             {
                 SceneManager.LoadScene(_menuSceneName);
             }
