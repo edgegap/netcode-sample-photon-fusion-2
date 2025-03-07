@@ -19,7 +19,7 @@ namespace Asteroids.HostSimple
         {
             if (Object.HasStateAuthority == false) return;
             // Collect all spawn points in the scene.
-            _spawnPoints = FindObjectsOfType<SpawnPoint>();
+            _spawnPoints = (SpawnPoint[])FindObjectsByType(typeof(SpawnPoint), FindObjectsSortMode.None);
         }
 
         // The spawner is started when the GameStateController switches to GameState.Running.

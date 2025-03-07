@@ -13,7 +13,7 @@ namespace Asteroids.HostSimple
 
         private void Start()
         {
-            var count = FindObjectsOfType<PlayerData>().Length;
+            var count = FindObjectsByType(typeof(PlayerData), FindObjectsSortMode.None).Length;
             if (count > 1)
             {
                 Destroy(gameObject);

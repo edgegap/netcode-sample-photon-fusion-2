@@ -139,7 +139,7 @@ namespace Asteroids.HostSimple
 
             _playerDataNetworked.SubtractLife();
 
-            FindObjectOfType<GameStateController>().CheckIfGameHasEnded();
+            FindFirstObjectByType<GameStateController>().CheckIfGameHasEnded();
         }
 
         // Resets the spaceships movement velocity
