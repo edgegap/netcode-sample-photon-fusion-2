@@ -7,19 +7,18 @@ namespace Asteroids.HostSimple
 {
     // Class controlling the visual representation of the spaceship (turning the 3D model on / off)
     // and visual feedback for the player (engine & destruction VFX)
-    public class SpaceshipVisualController : SimulationBehaviour, ISpawned
+    public class SpaceshipVisualController : MonoBehaviour
     {
         [SerializeField] private MeshRenderer _spaceshipModel = null;
         [SerializeField] private ParticleSystem _destructionVFX = null;
         [SerializeField] private ParticleSystem _engineTrailVFX = null;
 
         // Colors the ship in the color assigned to the PlayerRef's index
-        public void Spawned()
+        public void SetColorFromPlayerID(int playerID)
         {
-            var playerRef = Object.InputAuthority;
             foreach (Renderer r in GetComponentsInChildren<Renderer>())
             {
-                r.material.color = GetColor(playerRef.PlayerId);
+                r.material.color = GetColor(playerID);
             }
         }
 

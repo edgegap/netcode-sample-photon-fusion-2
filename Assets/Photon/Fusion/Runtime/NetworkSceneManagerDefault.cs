@@ -215,7 +215,11 @@ namespace Fusion {
           }
 
           if (gameObject.scene != MultiPeerScene) {
+            gameObject.transform.SetParent(null, true);
             SceneManager.MoveGameObjectToScene(gameObject, MultiPeerScene);
+            
+            if (Application.isBatchMode == false)
+              Runner.AddVisibilityNodes(gameObject);
           }
           
           gameObject.transform.SetParent(root.transform, true);
@@ -259,18 +263,12 @@ namespace Fusion {
       
 #if FUSION_ENABLE_ADDRESSABLES && !FUSION_DISABLE_ADDRESSABLES
       // this may be a blocking call due to WaitForCompletion being used internally
-      if (!_addressableScenesTask.IsValueCreated) {
-        Log.WarnSceneManager(Runner, $"Going to block the thread in wait for addressable scene paths being resolved, call and await {nameof(LoadAddressableScenePathsAsync)} to avoid this.");
+      if (!TryGetAddressableScenes(out var addressableScenes)) {
+        Log.Error(this, $"Failed to resolve addressable scene paths, won't be able to resolve {sceneNameOrPath} or any other addressable scene.");
+        addressableScenes = Array.Empty<string>();
       }
 
-      string[] addressableScenes;
-      if (_addressableScenesTask.Value.Wait(TimeSpan.FromSeconds(10))) {
-        addressableScenes = _addressableScenesTask.Value.Result;
-      } else {
-        Log.ErrorSceneManager(this, $"Failed to resolve addressable scene paths in 10 seconds, won't be able to resolve {sceneNameOrPath} or any other addressable scene.");
-        addressableScenes = Array.Empty<string>();
-      } 
-      var index             = FusionUnitySceneManagerUtils.GetSceneIndex(addressableScenes, sceneNameOrPath);
+      var index = FusionUnitySceneManagerUtils.GetSceneIndex(addressableScenes, sceneNameOrPath);
       if (index >= 0) {
         return SceneRef.FromPath(addressableScenes[index]);
       }
@@ -402,11 +400,13 @@ namespace Fusion {
             }
           } else {
 #if FUSION_ENABLE_ADDRESSABLES && !FUSION_DISABLE_ADDRESSABLES
-            if (!_addressableScenesTask.IsValueCreated) {
-              Log.WarnSceneManager(Runner, $"Going to block the thread in wait for addressable scene paths being resolved, call and await {nameof(LoadAddressableScenePathsAsync)} to avoid this.");
+            if (!TryGetAddressableScenes(out var addressableScenes)) {
+              Log.Error(this, $"Failed to resolve addressable scene paths, won't be able to resolve {sceneRef}");
+              addressableScenes = Array.Empty<string>();
             }
+
             string sceneAddress = null;
-            foreach (var path in _addressableScenesTask.Value.Result) {
+            foreach (var path in addressableScenes) {
               if (sceneRef.IsPath(path)) {
                 sceneAddress = path;
                 break;
@@ -519,7 +519,7 @@ namespace Fusion {
           Log.TraceSceneManager(Runner, $"Started unloading {sceneToUnload.Dump()} for {sceneRef}");
 
           if (!sceneToUnload.CanBeUnloaded()) {
-            Log.WarnSceneManager(Runner, $"Scene {sceneToUnload.Dump()} can't be unloaded for {sceneRef}, creating a temporary scene to unload it");
+            Log.Warn(Runner, $"Scene {sceneToUnload.Dump()} can't be unloaded for {sceneRef}, creating a temporary scene to unload it");
             Debug.Assert(!_tempUnloadScene.IsValid());
             _tempUnloadScene = SceneManager.CreateScene($"FusionSceneManager_TempEmptyScene");
           }
@@ -626,7 +626,7 @@ namespace Fusion {
       coro.Completed += x => {
 
         if (LogSceneLoadErrors && x.Error != null) {
-          Log.ErrorSceneManager(Runner, $"Failed async op: {x.Error.SourceException}");
+          Log.Error(Runner, $"Failed async op: {x.Error.SourceException}");
         }
         
         // remove this one from the list
@@ -657,7 +657,7 @@ namespace Fusion {
 
     protected void MarkSceneAsOwned(SceneRef sceneRef, Scene scene) {
       if (_allOwnedScenes.TryGetValue(scene, out var manager)) {
-        Log.WarnSceneManager(Runner, $"Scene {scene.Dump()} (for {sceneRef}) already owned by {manager}");
+        Log.Warn(Runner, $"Scene {scene.Dump()} (for {sceneRef}) already owned by {manager}");
       } else {
         _allOwnedScenes.Add(scene, this);
       }
@@ -665,7 +665,7 @@ namespace Fusion {
 
     private NetworkSceneAsyncOp FailOp(SceneRef sceneRef, Exception exception) {
       if (LogSceneLoadErrors) {
-        Log.ErrorSceneManager(Runner, $"Failed with: {exception}");
+        Log.Error(Runner, $"Failed with: {exception}");
       }
 
       return NetworkSceneAsyncOp.FromError(sceneRef, exception);
@@ -679,14 +679,29 @@ namespace Fusion {
     public string AddressableScenesLabel = "FusionScenes";
     
     public NetworkSceneManagerDefault() {
-      _addressableScenesTask = new Lazy<Task<string[]>>(() => GetAddressableScenes());
+      _addressableScenesTask = new(() => GetAddressableScenes());
     }
     
     public Task LoadAddressableScenePathsAsync() {
-      return _addressableScenesTask.Value;
+      return _addressableScenesTask.Value.Task;
     }
-
-    protected virtual Task<string[]> GetAddressableScenes() {
+    
+    /// <summary>
+    /// Creates a task that resolves addressable scene paths. By default, this method locates all the addressable scenes with
+    /// <see cref="AddressableScenesLabel"/> label. Override this method to provide a custom implementation. For example, user
+    /// might want to have a pre-defined set of addressable scenes to avoid the wait:
+    /// <example><code>
+    /// protected override GetAddressableScenesResult GetAddressableScenes() {
+    ///   return Task.FromResult(new string[] {
+    ///     "Assets/Scenes/AddressableScene1.unity",
+    ///     "Assets/Scenes/AddressableScene2.unity",
+    ///   });
+    /// }
+    /// </code></example>
+    /// </summary>
+    /// <returns>A task representing resolve operation and optionally a delegate to be invoked before the task is going to be
+    /// awaited synchronously</returns>
+    protected virtual GetAddressableScenesResult GetAddressableScenes() {
       Log.TraceSceneManager(Runner, $"Locating addressable scenes with label: {AddressableScenesLabel}");
       
       var tcs    = new TaskCompletionSource<string[]>();
@@ -705,11 +720,58 @@ namespace Fusion {
           Addressables.Release(op);
         }
       };
+      
+      return new GetAddressableScenesResult {
+        Task = tcs.Task,
         
-      return tcs.Task;
-    } 
+        // awaiting tasks synchronously does not play well with addressables; simply waiting will block the main thread and that's it.
+        // addressables *need* to have WaitForCompletion called
+        BeforeWaitForCompletion = () => {
+          if (result.IsValid()) {
+            result.WaitForCompletion();
+          }
+        },
+      };
+    }
+
+    /// <summary>
+    /// Returns the timeout for addressable scene paths to be resolved. By default, this method returns 10 seconds.
+    /// </summary>
+    /// <returns></returns>
+    protected virtual TimeSpan GetAddressableScenePathsTimeout() {
+      return TimeSpan.FromSeconds(10);
+    }
     
-    private Lazy<Task<string[]>>                                      _addressableScenesTask;
+    private bool TryGetAddressableScenes(out string[] addressableScenes) {
+      if (!_addressableScenesTask.IsValueCreated) {
+        Log.Warn(Runner, $"Going to block the thread in wait for addressable scene paths being resolved, call and await {nameof(LoadAddressableScenePathsAsync)} to avoid this.");
+      }
+
+      var t = _addressableScenesTask.Value;
+      if (!t.Task.IsCompleted) {
+        t.BeforeWaitForCompletion?.Invoke();
+        
+        if (!t.Task.Wait(GetAddressableScenePathsTimeout())) {
+          addressableScenes = null;
+          return false;
+        }
+      }
+
+      addressableScenes = t.Task.Result;
+      return true;
+    }
+
+    protected struct GetAddressableScenesResult {
+      public Task<string[]> Task;
+      public Action         BeforeWaitForCompletion;
+      public static implicit operator GetAddressableScenesResult(Task<string[]> task) {
+        return new GetAddressableScenesResult {
+          Task = task,
+        };
+      }
+    }
+
+    private Lazy<GetAddressableScenesResult>                          _addressableScenesTask;
     private Dictionary<SceneRef, AsyncOperationHandle<SceneInstance>> _addressableOperations = new();
 #endif
 

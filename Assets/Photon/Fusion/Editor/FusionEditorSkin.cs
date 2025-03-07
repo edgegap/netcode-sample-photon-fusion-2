@@ -4,6 +4,9 @@ namespace Fusion.Editor {
   using UnityEditor;
   using UnityEngine;
 
+  /// <summary>
+  /// An editor scriptable object that stores UI skins and different <see cref="GUIStyle"/> Unity inspectors and custom windows.
+  /// </summary>
 #if FUSION_DEV
   [CreateAssetMenu(menuName = "Fusion/Editor Skin")]
 #endif
@@ -35,7 +38,6 @@ namespace Fusion.Editor {
     public static GUIStyle OutlineBoxStyle              => instance.Skin.GetStyle("outline-box");
     
     
-    
     public static Color    HelpInlineBoxColor          => EditorGUIUtility.isProSkin ? new Color(0.317f, 0.337f, 0.352f, 1.000f) : new Color(0.686f, 0.776f, 0.859f);
     public static Color    WarningInlineBoxColor       => EditorGUIUtility.isProSkin ? new Color(0.36f, 0.33f, 0.22f, 1.00f) : new Color(0.98f, 0.94f, 0.80f, 0.90f);
     public static Color    ErrorInlineBoxColor         => EditorGUIUtility.isProSkin ? new Color(0.40f, 0.15f, 0.10f, 1.00f) : new Color(0.9f, 0.70f, 0.70f, 1.00f);
@@ -57,7 +59,17 @@ namespace Fusion.Editor {
     public static readonly LazyGUIStyle RawDataStyle = LazyGUIStyle.Create(_ => new GUIStyle(EditorStyles.textArea) { wordWrap = true });
     
     private static Texture2D FindTextureOrThrow(string id) {
-      return EditorGUIUtility.FindTexture(id) ?? throw new ArgumentOutOfRangeException($"Could not find texture with id {id}");
+      var texture = EditorGUIUtility.FindTexture(id);
+      if (texture) {
+        return texture;
+      }
+      
+      var icon = EditorGUIUtility.IconContent(id);
+      if (icon?.image) {
+        return (Texture2D)icon.image;
+      }
+      
+      throw new ArgumentOutOfRangeException($"Could not find texture with id {id}");
     }
 
     private Dictionary<ScriptHeaderBackColor, Color> _scriptHeaderStyles = new() {

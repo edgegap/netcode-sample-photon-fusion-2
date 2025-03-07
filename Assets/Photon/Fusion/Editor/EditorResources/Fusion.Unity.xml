@@ -30,264 +30,215 @@
             which returns a list of nodes for a given LocalIdentifierInFile.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStatsGraphBase._statSourceType">
+        <member name="P:Fusion.Statistics.FusionNetworkObjectStatsGraphCombine.NetworkObjectID">
             <summary>
-            Which section of the Fusion engine is being monitored. In combination with StatId, this selects the stat being monitored.
+            Gets the unique identifier of the network object.
+            </summary>
+            <value>
+            The network object identifier.
+            </value>
+        </member>
+        <member name="T:Fusion.Statistics.CanvasAnchor">
+            <summary>
+            The side to attach the statistics panel anchor.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStatsGraphBase._statId">
+        <member name="F:Fusion.Statistics.FusionStatistics._statsEnabled">
             <summary>
-            The specific stat being monitored.
+            Flags controlling which Mecanim data will be synced.
             </summary>
         </member>
-        <member name="T:Fusion.FusionStats">
+        <member name="P:Fusion.Statistics.FusionStatistics.IsPanelActive">
             <summary>
-            Creates and controls a Canvas with one or multiple telemetry graphs. Can be created as a scene object or prefab,
-            or be created at runtime using the <see cref="M:Fusion.FusionStats.Create(UnityEngine.Transform,Fusion.NetworkRunner,System.Nullable{Fusion.FusionStats.DefaultLayouts},System.Nullable{Fusion.FusionStats.DefaultLayouts})"/> methods. If created as the child of a <see cref="T:Fusion.NetworkObject"/>
-            then <see cref="P:Fusion.FusionStats.EnableObjectStats"/> will automatically be set to true.
+            Gets a value indicating whether the statistics panel is active.
             </summary>
         </member>
-        <member name="M:Fusion.FusionStats.Create(UnityEngine.Transform,Fusion.NetworkRunner,System.Nullable{Fusion.FusionStats.DefaultLayouts},System.Nullable{Fusion.FusionStats.DefaultLayouts})">
+        <member name="M:Fusion.Statistics.FusionStatistics.SetStatsCustomConfig(System.Collections.Generic.List{Fusion.Statistics.FusionStatistics.FusionStatisticsStatCustomConfig})">
             <summary>
-            Creates a new GameObject with a <see cref="T:Fusion.FusionStats"/> component, attaches it to any supplied parent, and generates Canvas/Graphs.
+            Sets the custom configuration for Fusion Statistics.
             </summary>
-            <param name="runner"></param>
-            <param name="parent">Generated FusionStats component and GameObject will be added as a child of this transform.</param>
-            <param name="objectLayout">Uses a predefined position.</param>
-            <param name="netStatsMask">The network stats to be enabled. If left null, default statistics will be used.</param>
-            <param name="simStatsMask">The simulation stats to be enabled. If left null, default statistics will be used.</param>
+            <param name="customConfig">The list of custom configurations for Fusion Statistics.</param>
         </member>
-        <member name="T:Fusion.FusionStats.StatCanvasTypes">
+        <member name="M:Fusion.Statistics.FusionStatistics.SetCanvasAnchor(Fusion.Statistics.CanvasAnchor)">
             <summary>
-            Options for displaying stats as screen overlays or world GameObjects.
+            Sets the anchor position of the Fusion Statistics canvas.
             </summary>
+            <param name="anchor">The anchor position of the canvas (TopLeft or TopRight).</param>
         </member>
-        <member name="T:Fusion.FusionStats.DefaultLayouts">
+        <member name="M:Fusion.Statistics.FusionStatistics.OnEditorChange">
             <summary>
-            Predefined layout default options.
+            Called from a custom editor script.
+            Will update any editor information into the fusion statistics.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.RedrawInterval">
+        <member name="M:Fusion.Statistics.FusionStatistics.SetupStatisticsPanel">
             <summary>
-            Interval (in seconds) between Graph redraws. Higher values (longer intervals) reduce CPU overhead, draw calls and garbage collection. 
+            Sets up the statistics panel for Fusion statistic tracking.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._canvasType">
+        <member name="M:Fusion.Statistics.FusionStatistics.SetWorldAnchor(Fusion.Statistics.FusionStatsWorldAnchor,System.Single)">
             <summary>
-            Selects between displaying Canvas as screen overlay, or a world GameObject.
+            Sets the world anchor for Fusion Statistics. Set null to return to screen space overlay.
+            </summary>
+            <param name="anchor">The FusionStatsWorldAnchor component that defines the anchor object. Null to return to screen space overlay.</param>
+            <param name="scale">The scale of the statistics panel.</param>
+        </member>
+        <member name="M:Fusion.Statistics.FusionStatistics.DestroyStatisticsPanel">
+            <summary>
+            Destroys the statistics panel.
             </summary>
         </member>
-        <member name="P:Fusion.FusionStats.CanvasType">
+        <member name="T:Fusion.Statistics.RenderSimStats">
             <summary>
-            Selects between displaying Canvas as screen overlay, or a world GameObject.
+            List of all simulation stats able to render on a graph.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._showButtonLabels">
+        <member name="F:Fusion.Statistics.RenderSimStats.InPackets">
             <summary>
-            Enables text labels for the control buttons.
+            Incoming packets.
             </summary>
         </member>
-        <member name="P:Fusion.FusionStats.ShowButtonLabels">
+        <member name="F:Fusion.Statistics.RenderSimStats.OutPackets">
             <summary>
-            Enables text labels for the control buttons.
+            Outgoing packets.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._maxHeaderHeight">
+        <member name="F:Fusion.Statistics.RenderSimStats.RTT">
             <summary>
-            Height of button region at top of the stats panel. Values less than or equal to 0 hide the buttons, and reduce the header size.
+            Round Trip Time.
             </summary>
         </member>
-        <member name="P:Fusion.FusionStats.MaxHeaderHeight">
+        <member name="F:Fusion.Statistics.RenderSimStats.InBandwidth">
             <summary>
-            Height of button region at top of the stats panel. Values less than or equal to 0 hide the buttons, and reduce the header size.
+            In Bandwidth in Bytes.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.CanvasScale">
+        <member name="F:Fusion.Statistics.RenderSimStats.OutBandwidth">
             <summary>
-             The size of the canvas when <see cref="P:Fusion.FusionStats.CanvasType"/> is set to <see cref="F:Fusion.FusionStats.StatCanvasTypes.GameObject"/>.
+            Out Bandwidth in Bytes.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.CanvasDistance">
+        <member name="F:Fusion.Statistics.RenderSimStats.Resimulations">
             <summary>
-            The distance on the Z axis the canvas will be positioned. Allows moving the canvas in front of or behind the parent GameObject.
+            Amount of re-simulation ticks executed.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._gameObjectRect">
+        <member name="F:Fusion.Statistics.RenderSimStats.ForwardTicks">
             <summary>
-            The Rect which defines the position of the stats canvas on a GameObject. Sizes are normalized percentages.(ranges of 0f-1f).
+            Amount of forward ticks executed.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._overlayRect">
+        <member name="F:Fusion.Statistics.RenderSimStats.InputReceiveDelta">
             <summary>
-            The Rect which defines the position of the stats canvas overlay on the screen. Sizes are normalized percentages.(ranges of 0f-1f).
+            Average measured time between two input/state packets (from same client) received by the server.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._defaultLayout">
+        <member name="F:Fusion.Statistics.RenderSimStats.TimeResets">
             <summary>
-            <see cref="T:Fusion.FusionStatsGraph.Layouts"/> value which all child <see cref="T:Fusion.FusionStatsGraph"/> components will use if their <see cref="T:Fusion.FusionStatsGraph.Layouts"/> value is set to Auto.
+            Time sync abruptly reset count.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._noTextOverlap">
+        <member name="F:Fusion.Statistics.RenderSimStats.StateReceiveDelta">
             <summary>
-            UI Text on FusionGraphs can only overlay the bar graph if the canvas is perfectly facing the camera. 
-            Any other angles will result in ZBuffer fighting between the text and the graph bar shader.
-            For uses where perfect camera billboarding is not possible (such as VR), this toggle prevents FusionGraph layouts being used where text and graphs overlap.
-            Normally leave this unchecked, unless you are experiencing corrupted text rendering.
+            Average measured time between two state packets (from server) received by the client.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._noGraphShader">
+        <member name="F:Fusion.Statistics.RenderSimStats.SimulationTimeOffset">
             <summary>
-            Disables the bar graph in <see cref="T:Fusion.FusionStatsGraph"/>, and uses a text only layout.
-            Enable this if <see cref="T:Fusion.FusionStatsGraph"/> is not rendering correctly in VR.
+            Average buffering for prediction.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.GraphColumnCount">
+        <member name="F:Fusion.Statistics.RenderSimStats.SimulationSpeed">
             <summary>
-            Force graphs layout to use X number of columns.
+            How much the simulation is currently sped up / slowed down.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._graphMaxWidth">
+        <member name="F:Fusion.Statistics.RenderSimStats.InterpolationOffset">
             <summary>
-            If <see cref="F:Fusion.FusionStats.GraphColumnCount"/> is set to zero, then columns will automatically be added as needed to limit graphs to this width or less.
+            Average buffering for interpolation.
             </summary>
         </member>
-        <member name="P:Fusion.FusionStats.GraphMaxWidth">
+        <member name="F:Fusion.Statistics.RenderSimStats.InterpolationSpeed">
             <summary>
-            If <see cref="F:Fusion.FusionStats.GraphColumnCount"/> is set to zero, then columns will automatically be added as needed to limit graphs to this width or less.
+            How much interpolation is currently sped up / slowed down.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._enableObjectStats">
+        <member name="F:Fusion.Statistics.RenderSimStats.InputInBandwidth">
             <summary>
-            Enables/Disables all NetworkObject related elements.
+            Input in bandwidth.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._object">
+        <member name="F:Fusion.Statistics.RenderSimStats.InputOutBandwidth">
             <summary>
-            The <see cref="T:Fusion.NetworkObject"/> source for any <see cref="!:Stats.ObjStats"/> specific telemetry.
+            Input out bandwidth.
             </summary>
         </member>
-        <member name="P:Fusion.FusionStats.Object">
+        <member name="F:Fusion.Statistics.RenderSimStats.AverageInPacketSize">
             <summary>
-            Returns the set serialized <see cref="T:Fusion.NetworkObject"/> for this stat window. If that is null, returns the static MonitoredNetworkObject,
-            which can be set using <see cref="M:Fusion.FusionStats.SetMonitoredNetworkObject(Fusion.NetworkObject)"/>.
+            Average size for received packet.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._objectTitleHeight">
+        <member name="F:Fusion.Statistics.RenderSimStats.AverageOutPacketSize">
             <summary>
-            Height of Object title region at top of the stats panel.
+            Average size for sent packet.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._objectIdsHeight">
+        <member name="F:Fusion.Statistics.RenderSimStats.InObjectUpdates">
             <summary>
-            Height of Object info region at top of the stats panel.
+            Amount of object updates received.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._objectMetersHeight">
+        <member name="F:Fusion.Statistics.RenderSimStats.OutObjectUpdates">
             <summary>
-            Height of Object info region at top of the stats panel.
+            Amount of object updates sent.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._runner">
+        <member name="F:Fusion.Statistics.RenderSimStats.ObjectsAllocatedMemoryInUse">
             <summary>
-            The <see cref="T:Fusion.NetworkRunner"/> currently associated with this <see cref="T:Fusion.FusionStats"/> component and graphs.
+            Memory in use for the object allocator.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.RunnerFromSelected">
+        <member name="F:Fusion.Statistics.RenderSimStats.GeneralAllocatedMemoryInUse">
             <summary>
-            Editor-Only. If no <see cref="P:Fusion.FusionStats.Object"/> is set, this FusionStats will attempt to connect to the NetworkRunner for the current selected GameObject.
+            Memory in use for the general allocator.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.InitializeAllGraphs">
+        <member name="F:Fusion.Statistics.RenderSimStats.ObjectsAllocatedMemoryFree">
             <summary>
-            Initializes a <see cref="T:Fusion.FusionStatsGraph"/> for all available stats, even if not initially included. 
-            If disabled, graphs added after initialization will be added to the bottom of the interface stack.
+            Memory free for the object allocator.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.ConnectTo">
+        <member name="F:Fusion.Statistics.RenderSimStats.GeneralAllocatedMemoryFree">
             <summary>
-            When <see cref="F:Fusion.FusionStats._runner"/> is null and no <see cref="T:Fusion.NetworkRunner"/> exists in the current scene, FusionStats will continuously attempt to find and connect to an active <see cref="T:Fusion.NetworkRunner"/> which matches these indicated modes.
+            Memory free for the general allocator.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._includedObjStats">
+        <member name="F:Fusion.Statistics.RenderSimStats.WordsWrittenCount">
             <summary>
-            Selects which NetworkObject stats should be displayed.
+            Amount of written words. How many networked changes are being sent.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._includedNetStats">
+        <member name="F:Fusion.Statistics.RenderSimStats.WordsWrittenSize">
             <summary>
-            Selects which NetConnection stats should be displayed.
+            Size of all last written words in Bytes.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats._includedSimStats">
+        <member name="F:Fusion.Statistics.RenderSimStats.WordsReadCount">
             <summary>
-            Selects which Simulation stats should be displayed.
+            Amount of read words. How many networked changes are being received.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.AutoDestroy">
+        <member name="F:Fusion.Statistics.RenderSimStats.WordsReadSize">
             <summary>
-            Automatically destroys this <see cref="T:Fusion.FusionStats"/> GameObject if the associated runner is null or inactive.
-            Otherwise attempts will continuously be made to find an new active runner which is running in <see cref="T:Fusion.SimulationModes"/> specified by <see cref="F:Fusion.FusionStats.ConnectTo"/>, and connect to that.
+            Size of all last read words in Bytes.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.EnforceSingle">
+        <member name="T:Fusion.FusionBasicBillboard">
             <summary>
-            Only one instance with the <see cref="F:Fusion.FusionStats.Guid"/> can exist if there is no associated <see cref="T:Fusion.NetworkObject"/> <see cref="F:Fusion.FusionStats._object"/>. Will destroy any additional instances on Awake.
+            Component which automatically faces this GameObject toward the supplied Camera. If Camera == null, will face towards Camera.main.
             </summary>
         </member>
-        <member name="F:Fusion.FusionStats.Guid">
-            <summary>
-            Identifier used to enforce single instances of <see cref="T:Fusion.FusionStats"/> when running in Multi-Peer mode. 
-            When <see cref="F:Fusion.FusionStats.EnforceSingle"/> is enabled, only one instance of <see cref="T:Fusion.FusionStats"/> with this GUID will be active at any time,
-            regardless of the total number of peers running.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStats.LabelFont">
-            <summary>
-            The font to be used for all non-number labels.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStats.ValueFont">
-            <summary>
-            The font to be used for all number labels.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStats._modifyColors">
-            <summary>
-            Shows/hides controls in the inspector for defining element colors.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStats._graphColorGood">
-            <summary>
-            The color used for the telemetry graph data.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStats._graphColorWarn">
-            <summary>
-            The color used for the telemetry graph data.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStats._graphColorBad">
-            <summary>
-            The color used for the telemetry graph data.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStats._graphColorFlag">
-            <summary>
-            The color used for the telemetry graph data.
-            </summary>
-        </member>
-        <member name="M:Fusion.FusionStats.SetMonitoredNetworkObject(Fusion.NetworkObject)">
-            <summary>
-            Any FusionStats instance with NetworkObject stats enabled, will use this Object when that FusionStats.Object is null.
-            </summary>
-            <param name="no"></param>
-        </member>
-        <member name="T:Fusion.FusionStatsBillboard">
-            <summary>
-            Companion component for <see cref="T:Fusion.FusionStats"/>, which automatically faces this GameObject toward the supplied Camera. If Camera == null, will face towards Camera.main.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStatsBillboard.Camera">
+        <member name="F:Fusion.FusionBasicBillboard.Camera">
             <summary>
             Force a particular camera to billboard this object toward. Leave null to use Camera.main.
             </summary>
@@ -313,7 +264,7 @@
             Prefix for the GUIDs of <see cref="T:Fusion.RunnerVisibilityLink"/> components which are added at runtime.
             </summary>
         </member>
-        <member name="M:Fusion.EnableOnSingleRunner.AddNodes">
+        <member name="M:Fusion.EnableOnSingleRunner.AddNodes(System.Collections.Generic.List{Fusion.RunnerVisibilityLink})">
             <summary>
             At runtime startup, this adds a <see cref="T:Fusion.RunnerVisibilityLink"/> for each component reference to this GameObject.
             </summary>
@@ -326,17 +277,6 @@
         <member name="M:Fusion.EnableOnSingleRunner.FindNestedRecognizedTypes">
             <summary>
             Finds visual/audio nested components on this GameObject and its children, and adds them to the Components collection.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStatsMeterBar.MeterMax">
-            <summary>
-            Values greater than 0 will limit the meter to a range of 0 to MeterMax.
-            Value of 0 will adjust the max to the largest value occurrence.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStatsMeterBar._showUITargets">
-            <summary>
-            Exposes the UI labels and controls of <see cref="T:Fusion.FusionStatsGraph"/>, so they may be modified if customizing this graph.
             </summary>
         </member>
         <member name="F:Fusion.FusionUnityLogger.UseGlobalPrefix">
@@ -374,10 +314,18 @@
             Server Color
             </summary>
         </member>
-        <member name="T:Fusion.EnableRunnerVisibility">
+        <member name="T:Fusion.RunnerEnableVisibility">
             <summary>
-            When running in Multi-Peer mode, this component automatically will register the associated <see cref="T:Fusion.NetworkRunner"/> with <see cref="T:Fusion.NetworkRunnerVisibilityExtensions"/>,
-            and will automatically attach loaded scene objects and spawned objects with the peers visibility handling.
+              When running in Multi-Peer mode, this component automatically will register the associated
+              <see cref="T:Fusion.NetworkRunner" /> with <see cref="T:Fusion.NetworkRunnerVisibilityExtensions" />,
+              and will automatically attach loaded scene objects and spawned objects with the peers visibility handling.
+            </summary>
+        </member>
+        <member name="T:Fusion.RunnerAOIGizmos">
+            <summary>
+            Add this Component to the NetworkRunner Prefab or GameObject. If Interest Management is enabled in NetworkProjectConfig ReplicationFeatures,
+            gizmos will be shown that indicate active Area Of Interest cells. These gizmos are currently NOT applicable to Shared Mode and will only
+            render for the Server/Host peer.
             </summary>
         </member>
         <member name="T:Fusion.RunnerVisibilityLinksRoot">
@@ -385,55 +333,68 @@
             Flag component which indicates a NetworkObject has already been factored into a Runner's VisibilityNode list.
             </summary>
         </member>
-        <member name="T:Fusion.StatsInternal.StatSourceTypes">
+        <member name="T:Fusion.FusionMppmStatus">
             <summary>
-            Engine sources for Samples.
+            The current status of MPPM. If the package is not enabled, this will always be <see cref="F:Fusion.FusionMppmStatus.Disabled"/>.
             </summary>
         </member>
-        <member name="M:Fusion.StatsInternal.FusionStatsExtensions.GetLongName(Fusion.StatsInternal.StatSourceTypes,System.Int32)">
+        <member name="F:Fusion.FusionMppmStatus.Disabled">
             <summary>
-            Get the cached Long Name for the stat source and type.
+            MPPM is not installed.
             </summary>
         </member>
-        <member name="T:Fusion.FieldsMask">
+        <member name="F:Fusion.FusionMppmStatus.MainInstance">
             <summary>
-            Base class for <see cref="T:Fusion.FieldsMask`1"/>.
+            This instance is the main instance. Can use <see cref="M:Fusion.FusionMppm.Send``1(``0)"/> to send commands.
             </summary>
         </member>
-        <member name="M:Fusion.FieldsMask.#ctor(Fusion.Mask256)">
+        <member name="F:Fusion.FusionMppmStatus.VirtualInstance">
             <summary>
-            Constructor for <see cref="T:Fusion.FieldsMask"/>.
+            This instance is a virtual instance. Will receive commands from the main instance.
             </summary>
         </member>
-        <member name="M:Fusion.FieldsMask.#ctor(System.Int64,System.Int64,System.Int64,System.Int64)">
+        <member name="T:Fusion.FusionMppm">
             <summary>
-            Constructor for <see cref="T:Fusion.FieldsMask"/>.
+            Support for Multiplayer Play Mode (MPPM). It uses named pipes
+            to communicate between the main Unity instance and virtual instances.
             </summary>
         </member>
-        <member name="M:Fusion.FieldsMask.#ctor">
+        <member name="F:Fusion.FusionMppm.Status">
             <summary>
-            Constructor for <see cref="T:Fusion.FieldsMask"/>.
+            The current status of MPPM.
             </summary>
         </member>
-        <member name="M:Fusion.FieldsMask.op_Implicit(Fusion.FieldsMask)~Fusion.Mask256">
+        <member name="F:Fusion.FusionMppm.MainEditor">
             <summary>
-            Implicitly convert <see cref="T:Fusion.FieldsMask"/> to its long mask value.
+            If <see cref="F:Fusion.FusionMppm.Status"/> is <see cref="F:Fusion.FusionMppmStatus.MainInstance"/>, this static field can be used to send commands.
             </summary>
         </member>
-        <member name="T:Fusion.FieldsMask`1">
+        <member name="M:Fusion.FusionMppm.Send``1(``0)">
             <summary>
-            Associates and displays a 64 bit mask which represents the field members of a struct. Makes it possible to treat a Struct like an Flags Enum.
-            NOTE: A <see cref="T:Fusion.FieldsMask`1"/> attribute is required for proper rendering in the Inspector.
+            Sends a command to all virtual instances. Use as:
+            <code>FusionMppm.MainEditor?.Send</code>
+            </summary>
+            <param name="data"></param>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="T:Fusion.FusionMppmCommand">
+            <summary>
+            The base class for all Fusion MPPM commands.
             </summary>
         </member>
-        <member name="M:Fusion.FieldsMask`1.#ctor(Fusion.Mask256)">
+        <member name="M:Fusion.FusionMppmCommand.Execute">
             <summary>
-            Constructor for <see cref="T:Fusion.FieldsMask`1"/>.
+            Execute the command on a virtual instance.
             </summary>
         </member>
-        <member name="M:Fusion.FieldsMask`1.#ctor">
+        <member name="P:Fusion.FusionMppmCommand.NeedsAck">
             <summary>
-            Constructor for <see cref="T:Fusion.FieldsMask`1"/>.
+            Does the main instance need to wait for an ack?
+            </summary>
+        </member>
+        <member name="P:Fusion.FusionMppmCommand.PersistentKey">
+            <summary>
+            If the command is persistent (i.e. needs to be executed on each domain reload), this key is used to store it.
             </summary>
         </member>
         <member name="T:Fusion.FusionBootstrapDebugGUI">
@@ -530,30 +491,38 @@
             for multiple runners to have separate cross-scene physics.
             </summary>
         </member>
-        <member name="P:Fusion.NetworkSceneManagerDefault.MultiplePeerDontDestroyOnLoadRoot">
+        <member name="P:Fusion.NetworkSceneManagerDefault.MultiPeerDontDestroyOnLoadRoot">
             <summary>
             Root for DontDestroyOnLoad objects. Instantiated on <see cref="P:Fusion.NetworkSceneManagerDefault.MultiPeerScene"/>.
             </summary>
-        </member>
-        <member name="P:Fusion.NetworkSceneManagerDefault.LastSceneInfo">
-            <summary>
-            The last read scene info. Updated in <see cref="M:Fusion.NetworkSceneManagerDefault.OnSceneInfoChanged"/>.
-            </summary>
-        </member>
-        <member name="M:Fusion.NetworkSceneManagerDefault.GetMultiplePeerRootForObject(UnityEngine.GameObject,System.Collections.Generic.IReadOnlyList{Fusion.NetworkSceneManagerDefault.MultiPeerSceneRoot})">
-            <summary>
-            Selects a scene root object to use for an object passed to <see cref="M:Fusion.NetworkSceneManagerDefault.MoveToRunnerScene(UnityEngine.GameObject)"/> in MultiplePeer mode.
-            The default implementation returns the first scene root, if available.
-            Override if you load multiple scenes per runner and need objects to spawn on a specific scene.
-            </summary>
-            <param name="obj"></param>
-            <param name="sceneRoots"></param>
-            <returns></returns>
         </member>
         <member name="F:Fusion.NetworkSceneManagerDefault.AddressableScenesLabel">
             <summary>
             A label by which addressable scenes can be discovered.
             </summary>
+        </member>
+        <member name="M:Fusion.NetworkSceneManagerDefault.GetAddressableScenes">
+            <summary>
+            Creates a task that resolves addressable scene paths. By default, this method locates all the addressable scenes with
+            <see cref="F:Fusion.NetworkSceneManagerDefault.AddressableScenesLabel"/> label. Override this method to provide a custom implementation. For example, user
+            might want to have a pre-defined set of addressable scenes to avoid the wait:
+            <example><code>
+            protected override GetAddressableScenesResult GetAddressableScenes() {
+              return Task.FromResult(new string[] {
+                "Assets/Scenes/AddressableScene1.unity",
+                "Assets/Scenes/AddressableScene2.unity",
+              });
+            }
+            </code></example>
+            </summary>
+            <returns>A task representing resolve operation and optionally a delegate to be invoked before the task is going to be
+            awaited synchronously</returns>
+        </member>
+        <member name="M:Fusion.NetworkSceneManagerDefault.GetAddressableScenePathsTimeout">
+            <summary>
+            Returns the timeout for addressable scene paths to be resolved. By default, this method returns 10 seconds.
+            </summary>
+            <returns></returns>
         </member>
         <member name="T:Fusion.FusionBootstrap">
             <summary>
@@ -615,11 +584,6 @@
             The default room name to use when connecting to photon cloud.
             </summary>
         </member>
-        <member name="F:Fusion.FusionBootstrap.AlwaysShowStats">
-            <summary>
-            Will automatically enable <see cref="T:Fusion.FusionStats"/> once peers have finished connecting.
-            </summary>
-        </member>
         <member name="F:Fusion.FusionBootstrap.InitialScenePath">
             <summary>
             The Scene that will be loaded after network shutdown completes (all peers have disconnected). 
@@ -629,6 +593,16 @@
         <member name="F:Fusion.FusionBootstrap._currentStage">
             <summary>
             Indicates which step of the startup process <see cref="T:Fusion.FusionBootstrap"/> is currently in.
+            </summary>
+        </member>
+        <member name="F:Fusion.FusionBootstrap.AutoConnectVirtualInstances">
+            <summary>
+            Requires Multiplayer Play Mode (MPPM) to be installed. If enabled, <see cref="T:Fusion.FusionBootstrap"/> will automatically join the virtual instance.
+            </summary>
+        </member>
+        <member name="F:Fusion.FusionBootstrap.VirtualInstanceConnectDelay">
+            <summary>
+            How much to wait before the main instance lets the virtual instances connect.
             </summary>
         </member>
         <member name="P:Fusion.FusionBootstrap.CurrentStage">
@@ -702,6 +676,11 @@
             </summary>
             <param name="clientCount"></param>
         </member>
+        <member name="P:Fusion.FusionBootstrap.ShouldShowGUI">
+            <summary>
+            Only show the GUI if the StartMode is set to UserInterface and not being run in a Virtual Instance (MPPM).
+            </summary>
+        </member>
         <member name="T:Fusion.FusionScalableIMGUI">
             <summary>
             In-Game IMGUI style used for the <see cref="T:Fusion.FusionBootstrapDebugGUI"/> interface.
@@ -738,19 +717,14 @@
             Additionally this component can be added manually at development time to identify specific Behaviours or Renderers you would like to restrict to one enabled copy at a time.
             </summary>
         </member>
-        <member name="F:Fusion.RunnerVisibilityLink._recognizedBehaviourNames">
-            <summary>
-            Types that fusion.runtime isn't aware of, which need to be found using names instead.
-            </summary>
-        </member>
         <member name="T:Fusion.RunnerVisibilityLink.PreferredRunners">
             <summary>
             The peer runner that will be used if more than one runner is visible, and this node was manually added by developer (indicating only one instance should be visible at a time).
             </summary>
         </member>
-        <member name="F:Fusion.RunnerVisibilityLink.PreferredRunners.InputAuthority">
+        <member name="F:Fusion.RunnerVisibilityLink.PreferredRunners.Auto">
             <summary>
-            The peer/runner with input authority will be used if visible.
+            The first visible runner will be used.
             </summary>
         </member>
         <member name="F:Fusion.RunnerVisibilityLink.PreferredRunners.Server">
@@ -761,6 +735,11 @@
         <member name="F:Fusion.RunnerVisibilityLink.PreferredRunners.Client">
             <summary>
             The first client peer/runner will be used if visible.
+            </summary>
+        </member>
+        <member name="F:Fusion.RunnerVisibilityLink.PreferredRunners.InputAuthority">
+            <summary>
+            The components will only be enabled on the instance that has input authority over the NetworkObject. Unlike the other options, this expects a NetworkObject to work and it will search its children and parents for it. 
             </summary>
         </member>
         <member name="F:Fusion.RunnerVisibilityLink.PreferredRunner">
@@ -788,52 +767,6 @@
             Sets the visibility state of this node.
             </summary>
             <param name="enabled"></param>
-        </member>
-        <member name="T:Fusion.FusionStatsGraph">
-            <summary>
-            Individual graph components generated and used by <see cref="T:Fusion.FusionStats"/>.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStatsGraph._layout">
-            <summary>
-            Select between automatic formatting (based on size and aspect ratio of the graph) and manual selection of the various graph layouts available.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStatsGraph._showGraph">
-            <summary>
-            Controls if the graph shader will render. Currently the graph shader only works in Overlay mode, so if forced to show Always here, it will not render correctly in 3d space.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStatsGraph.Padding">
-            <summary>
-            Padding added to text and other layout objects.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStatsGraph._alwaysExpandGraph">
-            <summary>
-            The graph shaded area (which is only visible in Overlay mode) will expand to the full extends of the <see cref="T:Fusion.FusionStatsGraph"/> component when this is enabled, regardless of size.
-            When false, the graph will automatically expand only as needed.
-            </summary>
-        </member>
-        <member name="F:Fusion.FusionStatsGraph._showUITargets">
-            <summary>
-            Exposes the UI labels and controls of <see cref="T:Fusion.FusionStatsGraph"/>, so they may be modified if customizing this graph.
-            </summary>
-        </member>
-        <member name="M:Fusion.FusionStatsGraph.Refresh">
-            <summary>
-            Returns true if the graph rendered. False if the size was too small and the graph was hidden.
-            </summary>
-        </member>
-        <member name="M:Fusion.FusionStatsGraph.Create(Fusion.FusionStats,Fusion.StatsInternal.StatSourceTypes,System.Int32,UnityEngine.RectTransform)">
-            <summary>
-            Creates a new GameObject with <see cref="T:Fusion.FusionStatsGraph"/> and attaches it to the specified parent.
-            </summary>
-        </member>
-        <member name="M:Fusion.FusionStatsGraph.Generate(Fusion.StatsInternal.StatSourceTypes,System.Int32,UnityEngine.RectTransform)">
-            <summary>
-            Generates the Graph UI for this <see cref="T:Fusion.FusionStatsGraph"/>.
-            </summary>
         </member>
     </members>
 </doc>

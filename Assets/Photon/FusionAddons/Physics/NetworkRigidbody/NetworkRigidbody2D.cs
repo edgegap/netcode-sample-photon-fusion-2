@@ -1,7 +1,7 @@
 using UnityEngine;
 
 namespace Fusion.Addons.Physics {
-  
+
   /// <summary>
   /// Fusion synchronization component for Unity Rigidbody2D.
   /// </summary>
@@ -23,8 +23,13 @@ namespace Fusion.Addons.Physics {
 
     /// <inheritdoc/>
     public override bool RBIsKinematic {
+#if UNITY_6000_0_OR_NEWER
+      get => _rigidbody.bodyType == RigidbodyType2D.Kinematic;
+      set => _rigidbody.bodyType = value ? RigidbodyType2D.Kinematic : RigidbodyType2D.Dynamic;
+#else
       get => _rigidbody.isKinematic;
       set => _rigidbody.isKinematic = value;
+#endif
     }
 
     /// <inheritdoc/>
@@ -34,34 +39,38 @@ namespace Fusion.Addons.Physics {
     }
     /// <inheritdoc/>
     protected override bool GetRBIsKinematic(Rigidbody2D rb) {
-      return rb.isKinematic;
-    }    
+      return RBIsKinematic;
+    }
     /// <inheritdoc/>
     protected override void SetRBIsKinematic(Rigidbody2D rb, bool kinematic) {
-      if (rb.isKinematic != kinematic) {
-        rb.isKinematic = kinematic;
+      if (RBIsKinematic != kinematic) {
+        RBIsKinematic = kinematic;
       }
     }
 
     /// <inheritdoc/>
-    protected override void CaptureRBPositionRotation(Rigidbody2D rb, ref NetworkRBData data) {
-      data.TRSPData.Position = rb.position;
+    protected override void CaptureRBPositionRotation(Rigidbody2D rb, ref NetworkRBData data, bool useWorldSpace) {
+      
+      var pos = useWorldSpace ? (Vector3)rb.position : rb.transform.localPosition;
+      var rot = useWorldSpace ? rb.rotation : rb.transform.eulerAngles.z;
+
+      data.TRSPData.Position = pos;
       if (UsePreciseRotation) {
-        data.FullPrecisionRotation = Quaternion.Euler(0, 0, rb.rotation);
+        data.FullPrecisionRotation = Quaternion.Euler(0, 0, rot);
       } else {
-        data.TRSPData.Rotation = Quaternion.Euler(0, 0, rb.rotation);
+        data.TRSPData.Rotation = Quaternion.Euler(0, 0, rot);
       }
     }
     /// <inheritdoc/>
     protected override void ApplyRBPositionRotation(Rigidbody2D rb, Vector3 pos, Quaternion rot) {
       rb.position = pos;
-      rb.rotation = rot.eulerAngles.z;   
+      rb.rotation = rot.eulerAngles.z;
     }
 
     /// <inheritdoc/>
     protected override NetworkRigidbodyFlags GetRBFlags(Rigidbody2D rb) {
       var flags = default(NetworkRigidbodyFlags);
-      if (rb.isKinematic)  { flags |= NetworkRigidbodyFlags.IsKinematic; }
+      if (RBIsKinematic)  { flags |= NetworkRigidbodyFlags.IsKinematic; }
       if (rb.IsSleeping()) { flags |= NetworkRigidbodyFlags.IsSleeping; }
       return flags;
     }
@@ -73,31 +82,48 @@ namespace Fusion.Addons.Physics {
     protected override void SetRBConstraints(Rigidbody2D rb, int constraints) {
       rb.constraints = (RigidbodyConstraints2D)constraints;
     }
-    
+
     /// <inheritdoc/>
     protected override void CaptureExtras(Rigidbody2D rb, ref NetworkRBData data) {
       data.Mass              = rb.mass;
+#if UNITY_6000_0_OR_NEWER
+      data.Drag              = rb.linearDamping;
+      data.AngularDrag       = rb.angularDamping;
+      data.LinearVelocity    = rb.linearVelocity;
+#else
       data.Drag              = rb.drag;
       data.AngularDrag       = rb.angularDrag;
       data.LinearVelocity    = rb.velocity;
       data.AngularVelocity2D = rb.angularVelocity;
       data.GravityScale2D    = rb.gravityScale;
+#endif
     }
+
     /// <inheritdoc/>
     protected override void ApplyExtras(Rigidbody2D rb, ref NetworkRBData data) {
       rb.mass            = data.Mass;
-      rb.drag            = data.Drag;
+#if UNITY_6000_0_OR_NEWER
+      rb.angularDamping = data.AngularDrag;
+      rb.linearDamping            = data.Drag;
+      rb.linearVelocity        = data.LinearVelocity;
+#else
       rb.angularDrag     = data.AngularDrag;
+      rb.drag            = data.Drag;
       rb.velocity        = data.LinearVelocity;
+#endif
       rb.angularVelocity = data.AngularVelocity.Z;
       rb.gravityScale    = data.GravityScale2D;
     }
-    
+
     /// <inheritdoc/>
     public override void ResetRigidbody() {
       base.ResetRigidbody();
       var rb = _rigidbody;
+#if UNITY_6000_0_OR_NEWER
+      rb.linearVelocity        = default;
+#else
       rb.velocity        = default;
+#endif
       rb.angularVelocity = default;
     }
 
@@ -111,7 +137,15 @@ namespace Fusion.Addons.Physics {
     /// <inheritdoc/>
     protected override bool IsRigidbodyBelowSleepingThresholds(Rigidbody2D rb) {
       // Linear threshold
-      if (rb.velocity.sqrMagnitude > Physics2D.linearSleepTolerance * Physics2D.linearSleepTolerance) {
+
+      float sqrMag;
+#if UNITY_6000_0_OR_NEWER
+      sqrMag = rb.linearVelocity.sqrMagnitude;
+#else
+      sqrMag = rb.velocity.sqrMagnitude;
+#endif
+      
+      if (sqrMag > Physics2D.linearSleepTolerance * Physics2D.linearSleepTolerance) {
         return false;
       }
 
@@ -119,7 +153,7 @@ namespace Fusion.Addons.Physics {
       var angularVel = rb.angularVelocity;
       return angularVel * angularVel <= Physics2D.angularSleepTolerance * Physics2D.angularSleepTolerance;
     }
-    
+
     /// <inheritdoc/>
     protected override bool IsStateBelowSleepingThresholds(NetworkRBData data) {
       // Linear threshold

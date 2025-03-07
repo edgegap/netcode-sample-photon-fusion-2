@@ -1,7 +1,7 @@
 using UnityEngine;
 
 namespace Fusion.Addons.Physics {
-  
+
   /// <summary>
   /// Base class for NRB which contains no physics references.
   /// </summary>
@@ -14,21 +14,21 @@ namespace Fusion.Addons.Physics {
     [InlineHelp]
     [SerializeField]
     public bool SyncScale;
-    
+
     /// <summary>
     /// Enables synchronization of Parent. Keep this disabled if you are not altering the parent of this transform, to reduce CPU utilization.
     /// </summary>
     [InlineHelp]
     [SerializeField]
     public bool SyncParent = true;
-    
+
     /// <summary>
     /// Designate a render-only (non-physics) target Transform for all interpolation.
     /// </summary>
     [InlineHelp]
     [SerializeField]
     protected Transform _interpolationTarget;
-    
+
     /// <summary>
     /// When disabled, rotation is stored in the <see cref="NetworkTRSPData"/> rotation field, which compresses rotation to 32 bits using 'Smallest Three'.
     /// When enabled, this <see cref="NetworkTRSPData"/> rotation field is not used.
@@ -38,7 +38,7 @@ namespace Fusion.Addons.Physics {
     [InlineHelp]
     [SerializeField]
     public bool UsePreciseRotation;
-    
+
     /// <summary>
     /// Enable checks which prevent interpolation from moving the root transform during interpolation unless needed.
     /// This mitigates the issue of Physics being broken by interpolating RBs by moving the Rigidbody's transform.
@@ -60,12 +60,12 @@ namespace Fusion.Addons.Physics {
     protected bool _showSleepOptions => !_interpolationTarget && UseRenderSleepThresholds;
 
     // Cached
-    
+
     /// <summary>
     /// Cached transform reference.
     /// </summary>
     protected Transform _transform;
-    
+
     /// <summary>
     /// Cached value indicating whether interpolation should occur.
     /// </summary>
@@ -77,13 +77,13 @@ namespace Fusion.Addons.Physics {
     /// <summary>
     /// Dirty flag for the root Transform.
     /// True when interpolation has altered the root transform's position, rotation, or scale in Render().
-    /// Is reset to false when the transform when the transform is restored to its networked state during the simulation loop.
+    /// Is reset to false when the transform is restored to its networked state during the simulation loop.
     /// </summary>
     protected bool _rootIsDirtyFromInterpolation;
     /// <summary>
     /// Dirty flag for the Interpolation Target.
     /// True when interpolation has altered the position, rotation, or scale in Render().
-    /// Is reset to false when the transform when the transform is restored to defaults during the simulation loop.
+    /// Is reset to false when the transform is restored to defaults during the simulation loop.
     /// </summary>
     protected bool _targIsDirtyFromInterpolation;
     /// <summary>
@@ -103,7 +103,7 @@ namespace Fusion.Addons.Physics {
       get => _interpolationTarget;
       set => SetInterpolationTarget(value);
     }
-    
+
     /// <summary>
     /// Change the Transform (typically a child of the Rigidbody root transform) which will be moved in interpolation.
     /// When set to null, the Rigidbody Transform will be used.
@@ -135,14 +135,14 @@ namespace Fusion.Addons.Physics {
 
       // Don't interpolate on Dedicated Server
       _doNotInterpolate = Runner.Mode == SimulationModes.Server;
-      
+
       // Validate the serialized target.
       SetInterpolationTarget(_interpolationTarget);
 
       RBPosition = transform.position;
       RBRotation = transform.rotation;
     }
-    
+
     /// <summary>
     /// Initiate a moving teleport. This method must be in FixedUpdateNetwork() called before
     /// <see cref="RunnerSimulatePhysics3D"/> and <see cref="RunnerSimulatePhysics2D"/> have simulated physics.

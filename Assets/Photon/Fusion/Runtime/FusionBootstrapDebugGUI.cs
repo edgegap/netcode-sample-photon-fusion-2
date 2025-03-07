@@ -87,7 +87,7 @@ namespace Fusion {
     private void Update() {
 
       var nds = EnsureNetworkDebugStartExists();
-      if (nds.StartMode != FusionBootstrap.StartModes.UserInterface) {
+      if (!nds.ShouldShowGUI) {
         return;
       }
 
@@ -146,7 +146,7 @@ namespace Fusion {
     protected virtual void OnGUI() {
 
       var nds = EnsureNetworkDebugStartExists();
-      if (nds.StartMode != FusionBootstrap.StartModes.UserInterface) {
+      if (!nds.ShouldShowGUI) {
         return;
       }
 

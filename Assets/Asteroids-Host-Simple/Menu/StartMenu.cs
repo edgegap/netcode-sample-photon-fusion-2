@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -31,13 +31,16 @@ namespace Asteroids.HostSimple
         [SerializeField] private TextMeshProUGUI _EdgegapConnectStatus = null;
 
         [SerializeField] private Button _EdgegapStartBtn = null;
-        
+
         private bool startDeploy = false;
         private bool tryJoinEdgegap = false;
         bool waiting = false;
 
         //You can use the value of your choice here
         private ushort serverPort = 5050;
+
+        [SerializeField]
+        private string _EdgegapPortMapName = "GAMEPORT";
 
         private NetworkRunner _runnerInstance = null;
 
@@ -52,43 +55,18 @@ namespace Asteroids.HostSimple
 
             if (EdgegapManager.IsServer())
             {
-                var getPortAndStartServer = EdgegapAPIInterface.GetPublicIpAndPortFromServer((ip, port) =>
+                string ip = Environment.GetEnvironmentVariable("ARBITRIUM_PUBLIC_IP");
+                string portAsStr = Environment.GetEnvironmentVariable($"ARBITRIUM_PORT_{_EdgegapPortMapName}_EXTERNAL");
+                string requestId = Environment.GetEnvironmentVariable("ARBITRIUM_REQUEST_ID");
+
+                if (ip == null || portAsStr == null || !ushort.TryParse(portAsStr, out ushort port) || requestId == null)
                 {
-                    var serverAddress = NetAddress.CreateFromIpPort(ip, port);
-                    StartGame(GameMode.Server, EdgegapManager.EdgegapRoomCode, _gameSceneName, serverAddress);
-                });
+                    throw new Exception("Unable to process Edgegap environment variables.");
+                }
 
-                StartCoroutine(getPortAndStartServer);
-            }
-        }
-
-        private void Update()
-        {
-            if (EdgegapManager.EdgegapPreServerMode && EdgegapManager.TransferingToEdgegapServer)
-            {
-                // launch game again with edgegap server room code
-                _EdgegapConnectStatus.text = "Deployment ready, attempting to connect...";
-                startDeploy = false;
-
-                var launchAfterDelay = RunAfterTime(0.5f, () => TryConnectDeployment(EdgegapManager.EdgegapRoomCode, _gameSceneName));
-                StartCoroutine(launchAfterDelay);
-            }
-            else if(tryJoinEdgegap)
-            {
-                tryJoinEdgegap = false;
-
-                _EdgegapConnectStatus.text = $"Attempting to connect to room {_roomName.text} with Edgegap...";
-
-                StartGame(GameMode.Client, _roomName.text, _gameSceneName);
-            }
-            else if (startDeploy && playerData.GetIpAddress() is not null)
-            {
-                startDeploy = false;
-
-                _EdgegapConnectStatus.text = $"Room {_roomName.text} not found, deploying Edgegap server...";
-
-                string[] ips = { playerData.GetIpAddress() };
-                StartCoroutine(EdgegapManager.Instance.Deploy(_roomName.text, ips, OnEdgegapServerReady));
+                NetAddress serverAddress = NetAddress.CreateFromIpPort(ip, port);
+                string roomCode = $"{requestId}.pr.edgegap.net";
+                StartGame(GameMode.Server, roomCode, _gameSceneName, serverAddress);
             }
         }
 
@@ -107,7 +85,7 @@ namespace Asteroids.HostSimple
 
         private void SetPlayerData()
         {
-            playerData = FindObjectOfType<PlayerData>();
+            playerData = FindFirstObjectByType<PlayerData>();
             if (playerData == null)
             {
                 playerData = Instantiate(_playerDataPrefab);
@@ -121,17 +99,11 @@ namespace Asteroids.HostSimple
             {
                 playerData.SetNickName(_nickName.text);
             }
-
-            if (EdgegapManager.EdgegapPreServerMode)
-            {
-                var crtn = EdgegapManager.Instance.GetPublicIpAddress(ip => playerData.SetIpAddress(ip));
-                StartCoroutine(crtn);
-            }
         }
 
         private async void StartGame(GameMode mode, string roomName, string sceneName, NetAddress? serverAddress = null)
         {
-            _runnerInstance = FindObjectOfType<NetworkRunner>();
+            _runnerInstance = FindFirstObjectByType<NetworkRunner>();
             if (_runnerInstance == null)
             {
                 _runnerInstance = Instantiate(_networkRunnerPrefab);
@@ -161,6 +133,11 @@ namespace Asteroids.HostSimple
             if (!result.Ok && EdgegapManager.EdgegapPreServerMode)
             {
                 startDeploy = true;
+                /*
+                 A typical issue that Fusion users have is a timeout when their STUN port discovery canʼt find out the
+                 external port within a pre-specified period of time (hardcoded in Photon). Our sample should include an
+                 automated client-side retry to resolve this
+                */
             }
             else
             {
@@ -175,15 +152,13 @@ namespace Asteroids.HostSimple
 
         public void StartEdgegap()
         {
+            //TODO edit
+            //start w just inputing roomname, then switch to vvv
+            //set playerdata (no need for ip), matchmake, then try StartGame(GameMode.Client, room name from ticket fqdn, _gameSceneName)
+
             EdgegapManager.EdgegapPreServerMode = true;
             SetPlayerData();
             tryJoinEdgegap = true;
-        }
-
-        public void OnEdgegapServerReady(string roomCode)
-        {
-            EdgegapManager.EdgegapRoomCode = roomCode;
-            EdgegapManager.TransferingToEdgegapServer = true;
         }
 
         IEnumerator RunAfterTime(float timeInSeconds, Action action)
@@ -193,46 +168,10 @@ namespace Asteroids.HostSimple
                 waiting = true;
                 yield return new WaitForSeconds(timeInSeconds);
                 action();
-            }     
-        }
-
-        private async void TryConnectDeployment(string roomName, string sceneName)
-        {
-            Debug.Log("Attempting to connect...");
-
-            _runnerInstance = FindObjectOfType<NetworkRunner>();
-            if (_runnerInstance == null)
-            {
-                _runnerInstance = Instantiate(_networkRunnerPrefab);
-            }
-            _runnerInstance.ProvideInput = true;
-
-            var startGameArgs = new StartGameArgs()
-            {
-                GameMode = GameMode.Client,
-                SessionName = roomName,
-                ObjectProvider = _runnerInstance.GetComponent<NetworkObjectPoolDefault>(),
-            };
-
-            var result = await _runnerInstance.StartGame(startGameArgs);
-                
-            if (!result.Ok)
-            {
-                waiting = false;
-                return;
-            }
-            else
-            {
-                _EdgegapConnectStatus.text = "Game starting...";
-                EdgegapManager.TransferingToEdgegapServer = false;
-            }
-
-            if (_runnerInstance.IsServer)
-            {
-                await _runnerInstance.LoadScene(sceneName);
             }
         }
 
+        //TODO remove
         private void ValidateRoomName(string value)
         {
             if (string.IsNullOrEmpty(value))
