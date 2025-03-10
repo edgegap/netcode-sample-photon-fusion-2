@@ -32,10 +32,6 @@ namespace Asteroids.HostSimple
 
         [SerializeField] private Button _EdgegapStartBtn = null;
 
-        private bool startDeploy = false;
-        private bool tryJoinEdgegap = false;
-        bool waiting = false;
-
         //You can use the value of your choice here
         private ushort serverPort = 5050;
 
@@ -46,14 +42,12 @@ namespace Asteroids.HostSimple
 
         private void Start()
         {
+            bool isServer = Application.isBatchMode;
             _roomName.onValueChanged.AddListener(ValidateRoomName);
             _EdgegapStartBtn.interactable = false;
             _nickName.onValueChanged.AddListener(value => CheckForSpecialcharacters(value, _nickName));
-            _EdgegapConnectStatus.text = "Please enter a room name to test with Edgegap.";
-            EdgegapManager.EdgegapPreServerMode = false;
-            waiting = false;
 
-            if (EdgegapManager.IsServer())
+            if (isServer)
             {
                 string ip = Environment.GetEnvironmentVariable("ARBITRIUM_PUBLIC_IP");
                 string portAsStr = Environment.GetEnvironmentVariable($"ARBITRIUM_PORT_{_EdgegapPortMapName}_EXTERNAL");
@@ -130,9 +124,8 @@ namespace Asteroids.HostSimple
             // GameMode.Client = Join a session with a specific name
             var result = await _runnerInstance.StartGame(startGameArgs);
 
-            if (!result.Ok && EdgegapManager.EdgegapPreServerMode)
+            if (!result.Ok)
             {
-                startDeploy = true;
                 /*
                  A typical issue that Fusion users have is a timeout when their STUN port discovery canʼt find out the
                  external port within a pre-specified period of time (hardcoded in Photon). Our sample should include an
@@ -141,8 +134,6 @@ namespace Asteroids.HostSimple
             }
             else
             {
-                startDeploy = false;
-
                 if (_runnerInstance.IsServer)
                 {
                     await _runnerInstance.LoadScene(sceneName);
@@ -152,23 +143,15 @@ namespace Asteroids.HostSimple
 
         public void StartEdgegap()
         {
-            //TODO edit
-            //start w just inputing roomname, then switch to vvv
-            //set playerdata (no need for ip), matchmake, then try StartGame(GameMode.Client, room name from ticket fqdn, _gameSceneName)
-
-            EdgegapManager.EdgegapPreServerMode = true;
             SetPlayerData();
-            tryJoinEdgegap = true;
+
+            //start w just inputing roomname, then switch to vvv
+            EdgegapMatchmakerClientHandler.Instance.InitialiseClient(StartGame, UpdateEdgegapConnectStatusTxt);
         }
 
-        IEnumerator RunAfterTime(float timeInSeconds, Action action)
+        private void UpdateEdgegapConnectStatusTxt(string msg)
         {
-            if (!waiting)
-            {
-                waiting = true;
-                yield return new WaitForSeconds(timeInSeconds);
-                action();
-            }
+            _EdgegapConnectStatus.text = msg;
         }
 
         //TODO remove
