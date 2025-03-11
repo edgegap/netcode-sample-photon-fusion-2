@@ -34,6 +34,8 @@ namespace Asteroids.HostSimple
 
         //You can use the value of your choice here
         private ushort serverPort = 5050;
+        private bool edgegapMatchmaker = false;
+        private bool retryStartGame = false;
 
         [SerializeField]
         private string _EdgegapPortMapName = "GAMEPORT";
@@ -43,9 +45,7 @@ namespace Asteroids.HostSimple
         private void Start()
         {
             bool isServer = Application.isBatchMode;
-            _roomName.onValueChanged.AddListener(ValidateRoomName);
-            _EdgegapStartBtn.interactable = false;
-            _nickName.onValueChanged.AddListener(value => CheckForSpecialcharacters(value, _nickName));
+            _EdgegapStartBtn.interactable = true;
 
             if (isServer)
             {
@@ -126,11 +126,21 @@ namespace Asteroids.HostSimple
 
             if (!result.Ok)
             {
-                /*
-                 A typical issue that Fusion users have is a timeout when their STUN port discovery canʼt find out the
-                 external port within a pre-specified period of time (hardcoded in Photon). Our sample should include an
-                 automated client-side retry to resolve this
-                */
+                if (retryStartGame)
+                {
+                    retryStartGame = false;
+                    StartGame(mode, roomName, sceneName);
+                }
+                else
+                {
+                    UpdateEdgegapConnectStatusTxt($"Unable to join room {roomName} due to {result.ShutdownReason}, see logs.");
+                    Debug.LogError($"{result.ErrorMessage}");
+
+                    if (edgegapMatchmaker)
+                    {
+                        EdgegapMatchmakerClientHandler.Instance.StopMatchmaking();
+                    }
+                }
             }
             else
             {
@@ -143,42 +153,18 @@ namespace Asteroids.HostSimple
 
         public void StartEdgegap()
         {
+            //edgegapMatchmaker = true;
+            retryStartGame = true;
             SetPlayerData();
 
-            //start w just inputing roomname, then switch to vvv
-            EdgegapMatchmakerClientHandler.Instance.InitialiseClient(StartGame, UpdateEdgegapConnectStatusTxt);
+            //test
+            StartGame(GameMode.Client, _roomName.text, _gameSceneName);
+            //EdgegapMatchmakerClientHandler.Instance.InitialiseClient(StartGame, UpdateEdgegapConnectStatusTxt);
         }
 
         private void UpdateEdgegapConnectStatusTxt(string msg)
         {
             _EdgegapConnectStatus.text = msg;
-        }
-
-        //TODO remove
-        private void ValidateRoomName(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                _EdgegapStartBtn.interactable = false;
-                _EdgegapConnectStatus.text = "Please enter a room name to test with Edgegap.";
-            }
-            else
-            {
-                _EdgegapStartBtn.interactable = true;
-                _EdgegapConnectStatus.text = "";
-
-                CheckForSpecialcharacters(value, _roomName);
-            }
-        }
-
-        private void CheckForSpecialcharacters(string value, TMP_InputField textfield)
-        {
-            string newValue = Regex.Replace(value, @"[^0-9a-zA-Z]", string.Empty);
-            if (value != newValue)
-            {
-                Debug.Log("Please do not use special characters in room name or player name.");
-                textfield.text = newValue;
-            }
         }
     }
 }

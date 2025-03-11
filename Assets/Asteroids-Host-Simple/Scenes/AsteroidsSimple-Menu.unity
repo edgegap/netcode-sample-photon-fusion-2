@@ -2103,27 +2103,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1315009859}
-  - component: {fileID: 1315009858}
+  - component: {fileID: 1315009860}
   m_Layer: 0
-  m_Name: EdgegapManager
+  m_Name: EdgegapMatchmakerClientHandler
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1315009858
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1315009857}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 705735008676a7847b93984200794ccd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  config: {fileID: 11400000, guid: ab52c53d39b3a204f95b09feaa5a6a9d, type: 2}
+  m_IsActive: 0
 --- !u!4 &1315009859
 Transform:
   m_ObjectHideFlags: 0
@@ -2139,6 +2126,34 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1315009860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1315009857}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92af27af047482141bd086824ee86074, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BaseUrl: 
+  AuthToken: 
+  ClientVersion: 1.0.0
+  SaveStateInPlayerPrefs: 0
+  PLAYER_PREFS_KEY_VERSION: EdgegapGen2ClientVersion
+  PLAYER_PREFS_KEY_TICKET: EdgegapGen2ClientTicket
+  PLAYER_PREFS_KEY_ASSIGNMENT: EdgegapGen2ClientAssignment
+  RequestTimeoutSeconds: 3
+  PollingBackoffSeconds: 1
+  MaxConsecutivePollingErrors: 10
+  RemoveAssignmentSeconds: 30
+  DeleteTicketOnPause: 0
+  DeleteTicketOnQuit: 1
+  LogTicketUpdates: 1
+  LogAssignmentUpdates: 1
+  LogPollingUpdates: 0
 --- !u!1001 &1469496112
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -751,6 +751,7 @@ PlayerSettings:
   webGLCloseOnQuit: 0
   webWasm2023: 0
   scriptingDefineSymbols:
+    Server: FUSION_WEAVER;FUSION2;EDGEGAP_PLUGIN_SERVERS
     Standalone: FUSION_WEAVER;FUSION2;FUSION_LOGLEVEL_INFO;EDGEGAP_PLUGIN_SERVERS
   additionalCompilerArguments: {}
   platformArchitecture: {}
