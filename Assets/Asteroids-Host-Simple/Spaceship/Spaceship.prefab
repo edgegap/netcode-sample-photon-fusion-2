@@ -4907,6 +4907,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SortKey: 3583807864
   ObjectInterest: 0
+  _DestroyWhenStateAuthorityLeaves: 0
+  _AllowStateAuthorityOverride: 1
   Flags: 264449
   NestedObjects: []
   NetworkedBehaviours:
@@ -4915,7 +4917,6 @@ MonoBehaviour:
   - {fileID: 8813624284770857263}
   - {fileID: 5995520130485653928}
   - {fileID: 3413019040037438842}
-  ForceRemoteRenderTimeframe: 0
 --- !u!114 &3318268825766571343
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5008,9 +5009,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a591d221a634417e9827eb58e17de84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _stateAuthorityChangeErrorCorrectionDelta: 0
   SyncScale: 0
-  SyncParent: 0
+  SyncParent: 1
   _interpolationTarget: {fileID: 8738269441093870728}
   UsePreciseRotation: 0
   UseRenderSleepThresholds: 1

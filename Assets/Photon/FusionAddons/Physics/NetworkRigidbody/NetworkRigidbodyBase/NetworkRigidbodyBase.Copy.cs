@@ -29,7 +29,7 @@ namespace Fusion.Addons.Physics
   public abstract partial class NetworkRigidbody<RBType, PhysicsSimType> : IBeforeAllTicks, IAfterTick {
 
     // PhysX/Box2D abstractions
-
+    
     /// <summary>
     /// Abstracted method for applying position and rotation values to the passed Rigidbody or Rigidbody2D.
     /// </summary>
@@ -38,17 +38,17 @@ namespace Fusion.Addons.Physics
     /// Abstracted method for capturing position and rotation values from the passed Rigidbody or Rigidbody2D
     /// to the <see cref="NetworkRBData"/> networked property.
     /// </summary>
-    protected abstract void CaptureRBPositionRotation(RBType rb, ref NetworkRBData data, bool useWorldSpace);
+    protected abstract void CaptureRBPositionRotation(RBType rb, ref NetworkRBData data);
     /// <summary>
     /// Abstracted method for capturing velocity and other values from the passed Rigidbody or Rigidbody2D
     /// to the <see cref="NetworkRBData"/> networked property.
     /// </summary>
-    protected abstract void CaptureExtras(RBType rb, ref NetworkRBData data);
+    protected abstract void CaptureExtras(RBType             rb, ref NetworkRBData data);
     /// <summary>
     /// Abstracted method for applying velocity and other additional values to the passed Rigidbody or Rigidbody2D
     /// from the <see cref="NetworkRBData"/> networked property.
     /// </summary>
-    protected abstract void ApplyExtras(RBType rb, ref NetworkRBData data);
+    protected abstract void ApplyExtras(RBType               rb, ref NetworkRBData data);
     /// <summary>
     /// Abstracted method for composing <see cref="NetworkRigidbodyFlags"/> from the passed Rigidbody/Rigidbody2D state.
     /// </summary>
@@ -81,18 +81,18 @@ namespace Fusion.Addons.Physics
     /// Abstracted method for forcing the passed Rigidbody/Rigidbody2D to wake.
     /// </summary>
     protected abstract void ForceRBWake( RBType rb);
-
+    
     // Main NRB logic
 
     private int _remainingSimulationsCount;
-
+    
     /// <inheritdoc/>
     void IBeforeAllTicks.BeforeAllTicks(bool resimulation, int tickCount) {
 
       // Capture the number of ticks about to be simulated.
       // We use this in AfterTick() to limit capturing state to only the last two ticks.
       _remainingSimulationsCount = tickCount;
-
+      
       // Recenter the interpolation target. TODO: Can get more selective/efficient with this later
       if (_targIsDirtyFromInterpolation && _interpolationTarget) {
         _interpolationTarget.localPosition = default;
@@ -119,13 +119,13 @@ namespace Fusion.Addons.Physics
       if (remainingTicks > 2) {
         return;
       }
-
+      
       // State Authority capture the last two Forward ticks. Only the last forward tick needs a full capture for networking.
-      if (HasStateAuthority) {
+      if (HasStateAuthority) { 
         CopyToBuffer(remainingTicks == 2);
       } else {
         // Non-StateAuth clients only need capture values for interpolation if they are InSimulation (predicted)
-        if (Object.IsInSimulation && _clientPrediction) {
+        if (Object.IsInSimulation) {
           CopyToBuffer(true);
         }
       }
@@ -136,7 +136,7 @@ namespace Fusion.Addons.Physics
     /// </summary>
     /// <param name="captureTRSPOnly">If the captured data is only used for interpolation (not for networking), then skip capturing extras (vel/angVel/tensor)</param>
     protected virtual void CopyToBuffer(bool captureTRSPOnly) {
-
+      
       var tr            = _transform;
       var rb            = _rigidbody;
       var flags         = GetRBFlags(rb);
@@ -157,14 +157,14 @@ namespace Fusion.Addons.Physics
           if (parent == null) {
             State.AreaOfInterestOverride = default;
             Data.TRSPData.Parent         = default;
-          }
+          } 
           // If there is a parent transform, we need to determine if it is a valid NB or a non-networked transform.
           else {
-
+        
             if (parent.TryGetComponent<NetworkBehaviour>(out var parentNB)) {
               if (_aoiEnabled) {
                 SetAreaOfInterestOverride(parentNB.Object);
-              }
+              } 
               Data.TRSPData.Parent = parentNB;
             } else {
               State.AreaOfInterestOverride = default;
@@ -176,8 +176,8 @@ namespace Fusion.Addons.Physics
           // Reset to default in case SyncParent was enabled/disabled at runtime
           State.AreaOfInterestOverride = default;
         }
-      }
-
+      } 
+      
       // Capture RB State
       if ((flags & NetworkRigidbodyFlags.IsKinematic) != 0) {
         Vector3    position;
@@ -200,8 +200,8 @@ namespace Fusion.Addons.Physics
         }
 
       } else {
-        CaptureRBPositionRotation(rb, ref Data, useWorldSpace);
-
+        CaptureRBPositionRotation(rb, ref Data);
+        
         // Only capture extras (velocity, etc) on the State Authority or if there is client prediction.
         if (!captureTRSPOnly) {
           if (_clientPrediction || Object.HasStateAuthority) {
@@ -226,14 +226,14 @@ namespace Fusion.Addons.Physics
       }
       Data.Flags = (flags, GetRBConstraints(rb));
     }
-
+    
     /// <summary>
     /// Copies the Fusion snapshot state onto the Rigidbody.
     /// </summary>
     /// <param name="predictionReset">Indicates if this is a reset from a remote server state, in which case everything needs to be reverted to state
     /// Otherwise, if it is for the State Authority or a non-simulated proxy - only the TRSP needs to be reset from interpolation changes. (not velocity etc)</param>
     protected virtual void CopyToEngine(bool predictionReset) {
-
+      
       var (flags, constraints) = Data.Flags;
       var  tr = _transform;
       var  rb = _rigidbody;
@@ -248,7 +248,7 @@ namespace Fusion.Addons.Physics
       if (syncParent) {
         // Important to know if we have a non-networked parent, as TRS values will be in world space
         bool hasNonNetworkedParent = Data.TRSPData.Parent == NetworkTRSPData.NonNetworkedParent;
-
+        
         var  currentParent         = tr.parent;
         if (Data.TRSPData.Parent != default) {
           isParented = true;
@@ -284,12 +284,12 @@ namespace Fusion.Addons.Physics
       } else {
         isParented = false;
       }
-
+      
       var networkedIsSleeping  = (flags & NetworkRigidbodyFlags.IsSleeping)  != 0;
       var networkedIsKinematic = (flags & NetworkRigidbodyFlags.IsKinematic) != 0;
       var currentIsSleeping    = IsRBSleeping(rb);
       var rootIsDirty          = _rootIsDirtyFromInterpolation;
-
+      
       // If the State Authority is asleep, it will have valid uncompressed pos/rot values.
       if (networkedIsSleeping) {
         pos = Data.FullPrecisionPosition;
@@ -298,10 +298,14 @@ namespace Fusion.Addons.Physics
         pos = Data.TRSPData.Position;
         rot = UsePreciseRotation ? Data.FullPrecisionRotation : Data.TRSPData.Rotation;
       }
-
+            
       // Both local and networked state are sleeping and in agreement - avoid waking the RB locally.
       // This test of position and rotation can possibly be removed by developers without consequence for many use cases.
       bool avoidWaking = !rootIsDirty && currentIsSleeping && networkedIsSleeping && tr.localPosition == pos && tr.localRotation == rot;
+      
+      if (networkedIsKinematic != GetRBIsKinematic(rb)) {
+        SetRBIsKinematic(rb, networkedIsKinematic);;
+      }
 
       // Apply position and rotation
       if (avoidWaking == false) {
@@ -326,38 +330,29 @@ namespace Fusion.Addons.Physics
       if (SyncScale) {
         tr.localScale = Data.TRSPData.Scale;
       }
+      
+      // Only apply extras and test for sleep handling for prediction resimulations
+      // Not when just undoing interpolation TRSP changes.
+      if (predictionReset && networkedIsKinematic == false) {
 
-      // Only apply extras and test for sleep handling for prediction re-simulations
-      // (Not when just undoing interpolation's transform changes).
-      // This segment will never run on the StateAuthority.
-      if (predictionReset) {
-
-        // If the RB's kinematic state was changed as part of re-simulation, change it back.
-        if (networkedIsKinematic != GetRBIsKinematic(rb)) {
-          SetRBIsKinematic(rb, networkedIsKinematic);;
+        ApplyExtras(rb, ref Data);
+        SetRBConstraints(rb, constraints);
+      
+        // Local state is already in agreement with network, can skip sleep handling
+        if (avoidWaking) {
+          return;
         }
-
-        // These are only applied for non-Kinematics, as this is waste of work for kinematic proxies.
-        if (networkedIsKinematic == false) {
-          ApplyExtras(rb, ref Data);
-          SetRBConstraints(rb, constraints);
-
-          // Local state is already in agreement with network, can skip sleep handling
-          if (avoidWaking) {
-            return;
-          }
-
-          // If sleeping states disagree, we need to intervene.
-          if (currentIsSleeping != networkedIsSleeping) {
-            if (networkedIsSleeping == false) {
-              ForceRBWake(rb);
-            } else if (IsRigidbodyBelowSleepingThresholds(rb)) {
-              // Devs may want to comment this out, if their physics sim experiences hitching when waking objects with collisions.
-              // This is here to make resting states 100% accurate, but ForceSleep can cause a hitch in re-simulations under very
-              // specific conditions.
-              ForceRBSleep(rb);
-            }
-          }
+        
+        // If sleeping states disagree, we need to intervene.
+        if (currentIsSleeping != networkedIsSleeping) {
+          if (networkedIsSleeping == false) {
+            ForceRBWake(rb);
+          } else if (IsRigidbodyBelowSleepingThresholds(rb)) {
+            // Devs may want to comment this out, if their physics sim experiences hitching when waking objects with collisions.
+            // This is here to make resting states 100% accurate, but ForceSleep can cause a hitch in re-simulations under very
+            // specific conditions.
+            ForceRBSleep(rb);
+          }          
         }
       }
     }

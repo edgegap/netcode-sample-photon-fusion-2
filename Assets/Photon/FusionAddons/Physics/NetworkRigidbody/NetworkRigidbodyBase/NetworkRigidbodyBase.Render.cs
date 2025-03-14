@@ -1,4 +1,6 @@
+
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace Fusion.Addons.Physics
 {
@@ -14,9 +16,9 @@ namespace Fusion.Addons.Physics
     /// Returns true if the passed NetworkRBData velocity energies are below the sleep threshold.
     /// </summary>
     protected abstract bool IsStateBelowSleepingThresholds(NetworkRBData data);
-
+      
     // NRB Render Logic
-
+ 
     /// <inheritdoc/>
     public override void Render() {
       // Specifically flagged to not interpolate for cached reasons (ie for Server (non-Host))
@@ -26,12 +28,12 @@ namespace Fusion.Addons.Physics
 
       var  isInSimulation         = Object.IsInSimulation;
       bool physicsSimulatorExists = (object)_physicsSimulator != null;
-
+      
       // If Unity is auto-simulating, only non-simulated proxies should be interpolated
       if (isInSimulation && (physicsSimulatorExists == false || _physicsSimulator.PhysicsAuthority == PhysicsAuthorities.Unity)) {
         return;
       }
-
+      
       var it = _interpolationTarget;
       var hasInterpolationTarget = (object)it != null;
 
@@ -49,7 +51,7 @@ namespace Fusion.Addons.Physics
           // due to FixedUpdate() sim results and FixedUpdateNetwork() based state capture not perfectly aligning.
           case PhysicsTimings.FixedUpdate when hasInterpolationTarget == false:
             return;
-
+          
           // Update-based movement should NEVER interpolate, it is always inherently in the Render timeframe.
           case PhysicsTimings.Update when Object.IsProxy == false:
             return;
@@ -60,12 +62,12 @@ namespace Fusion.Addons.Physics
       if (Object.RenderSource == RenderSource.Latest) {
         return;
       }
-
+      
       var tr                      = _transform;
       var useTarget               = isInSimulation && hasInterpolationTarget;
 
       if (TryGetSnapshotsBuffers(out var fr, out var to, out var alpha)) {
-
+        
         var frData = fr.ReinterpretState<NetworkRBData>();
         var toData = to.ReinterpretState<NetworkRBData>();
 
@@ -80,14 +82,14 @@ namespace Fusion.Addons.Physics
         var syncParent    = SyncParent;
         var useWorldSpace = !syncParent;
         var teleport      = frKey != toKey;
-
+        
         // Teleport Handling - Don't interpolate through non-moving teleports (indicated by positive key values).
         if (teleport && toKey >= 0) {
           toData = frData;
         }
 
         // Parenting specific handling
-
+        
         if (syncParent) {
           var currentParent = tr.parent;
 
@@ -95,7 +97,7 @@ namespace Fusion.Addons.Physics
           if (frData.TRSPData.Parent != default) {
 
             bool frHasNonNetworkedParent = frData.TRSPData.Parent == NetworkTRSPData.NonNetworkedParent;
-
+            
             if (frHasNonNetworkedParent) {
               useWorldSpace = true;
               // Do nothing. We can't look up the old non-networked parent here.
@@ -108,10 +110,10 @@ namespace Fusion.Addons.Physics
               }
 
             } else {
-              UnityEngine.Debug.LogError($"Parent of this object is not present {frData.TRSPData.Parent} {frData.TRSPData.Parent.Behaviour}.");
+              Debug.LogError($"Parent of this object is not present {frData.TRSPData.Parent} {frData.TRSPData.Parent.Behaviour}.");
               return;
-            }
-
+            }     
+            
             // switching to moving by root while parented (and kinematic), set the interpolation target to origin
             // We most move by the root because all TRSP is in Local Space, and the interpolation target needs to be positioned
             // in World Space.
@@ -123,10 +125,10 @@ namespace Fusion.Addons.Physics
               }
               _targIsDirtyFromInterpolation = false;
             }
-
+            
             // If the parent changes between From and To ... do no try to interpolate (different spaces)
             // We also are skipping sleep detection and teleport testing.
-            if (frData.TRSPData.Parent != toData.TRSPData.Parent) {
+            if (frHasNonNetworkedParent || frData.TRSPData.Parent != toData.TRSPData.Parent) {
               // For Non-Networked parents we use world space
               // When parented, ignore any specified interpolation target and move the NO transform always
               // (devs may want to change this behaviour themselves for edge cases)
@@ -157,10 +159,10 @@ namespace Fusion.Addons.Physics
                 // There is no parent, so we can safely move the interp target in world space.
                 // HOWEVER if developers move the object in LateUpdate this will break of course.
                 it.SetPositionAndRotation(frPosition, frRotation);
-
+                
 #if UNITY_EDITOR
                 if (syncScale) {
-                  UnityEngine.Debug.LogWarning($"{GetType().Name} cannot sync scale when using an interpolation target.");
+                  Debug.LogWarning($"{GetType().Name} cannot sync scale when using an interpolation target.");
                 }
 #endif
                 _targIsDirtyFromInterpolation = true;
@@ -174,11 +176,11 @@ namespace Fusion.Addons.Physics
               }
               return;
             }
-          }
-        }
+          }            
+        } 
 
         // General Positon/Rotation Rendering
-
+        
         Vector3    pos;
         Quaternion rot;
 
@@ -200,7 +202,7 @@ namespace Fusion.Addons.Physics
             it.localScale = scl;
           }
           _targIsDirtyFromInterpolation = true;
-        }
+        } 
         // else (no interpolation target set) we are moving the transform itself and not the interp target.
         else {
 
@@ -212,8 +214,8 @@ namespace Fusion.Addons.Physics
             var thresholds = RenderThresholds;
             if (
               (!thresholds.UseEnergy    || IsStateBelowSleepingThresholds(frData))                                                       &&
-              (thresholds.Position == 0 || (pos - tr.position).sqrMagnitude                 < thresholds.Position * thresholds.Position) &&
-              (thresholds.Rotation == 0 || Quaternion.Angle(rot, tr.rotation)               < thresholds.Rotation)                       &&
+              (thresholds.Position == 0 || (pos - tr.position).sqrMagnitude                 < thresholds.Position * thresholds.Position) && 
+              (thresholds.Rotation == 0 || Quaternion.Angle(rot, tr.rotation)               < thresholds.Rotation)                       && 
               (thresholds.Scale    == 0 || !syncScale || (scl - tr.localScale).sqrMagnitude < thresholds.Scale * thresholds.Scale)) {
               return;
             }
@@ -230,7 +232,7 @@ namespace Fusion.Addons.Physics
           }
           _rootIsDirtyFromInterpolation = true;
         }
-
+        
       } else {
         Debug.LogWarning($"No interpolation data");
       }

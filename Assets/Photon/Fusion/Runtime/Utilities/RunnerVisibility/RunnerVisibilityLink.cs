@@ -27,9 +27,9 @@ namespace Fusion {
     /// </summary>
     public enum PreferredRunners {
       /// <summary>
-      /// The first visible runner will be used.
+      /// The peer/runner with input authority will be used if visible.
       /// </summary>
-      Auto,
+      InputAuthority,
       /// <summary>
       /// The server peer/runner will be used if visible.
       /// </summary>
@@ -38,10 +38,6 @@ namespace Fusion {
       /// The first client peer/runner will be used if visible.
       /// </summary>
       Client,
-      /// <summary>
-      /// The components will only be enabled on the instance that has input authority over the NetworkObject. Unlike the other options, this expects a NetworkObject to work and it will search its children and parents for it. 
-      /// </summary>
-      InputAuthority,
     }
 
     private enum ComponentType {
@@ -62,8 +58,6 @@ namespace Fusion {
     /// The associated component with this node. This Behaviour or Renderer will be enabled/disabled when its NetworkRunner.IsVisible value is changed.
     /// </summary>
     public Component Component;
-    
-    public bool IsOnSingleRunner { get; private set; }
 
     /// <summary>
     /// Guid is used for common objects (user flagged components that should only run in one instance), to identify matching clones.
@@ -81,7 +75,6 @@ namespace Fusion {
     // cached runtime
     internal NetworkRunner _runner;
     private ComponentType _componentType;
-    private NetworkObject _networkObject;
     private bool _originalState;
 
     /// <summary>
@@ -160,17 +153,8 @@ namespace Fusion {
       this.UnregisterNode();
     }
 
-    internal void Initialize(UnityEngine.Component comp, NetworkRunner runner) {
+    internal void Initialize(UnityEngine.Component comp, NetworkRunner runner, LinkedListNode<RunnerVisibilityLink> node) {
       _runner = runner;
-      
-      // First look into children
-      _networkObject = GetComponentInChildren<NetworkObject>();
-      if (!_networkObject)
-        _networkObject = GetComponentInParent<NetworkObject>();
-      
-      if (!_networkObject && PreferredRunner == PreferredRunners.InputAuthority)
-        Log.Warn($"No NetworkObject found for RunnerVisibilityLink on {gameObject.name} with preferred runner as Input Authority. EnableOnSingleRunner will always disable it.");
-      
       if (comp is Renderer renderer) {
         _componentType = ComponentType.Renderer;
         _originalState = renderer.enabled;
@@ -214,32 +198,11 @@ namespace Fusion {
         //if (_originalState == true && Enabled == false) {
         //  _originalState = false;
         //}
-        
+
         Enabled = false;
       }
     }
 
-    internal bool IsInputAuth() {
-      if (_networkObject && _networkObject.IsValid) {
-        return _networkObject.HasInputAuthority;
-      } 
-
-      return false;
-    }
-
-    internal void SetupOnSingleRunnerLink(PreferredRunners preferredRunner) {
-      PreferredRunner = preferredRunner;
-      IsOnSingleRunner = true;
-    }
-
-    internal void InvokeRefreshCommonObjectVisibilities(float time) {
-      StopAllCoroutines();
-      Invoke(nameof(RetryRefreshCommonLinks), time);
-    }
-
-    private void RetryRefreshCommonLinks() {
-      NetworkRunnerVisibilityExtensions.RetryRefreshCommonLinks();
-    }
   }
 }
 

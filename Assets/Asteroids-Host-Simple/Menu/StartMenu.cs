@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -54,9 +54,9 @@ namespace Asteroids.HostSimple
                 string requestId = Environment.GetEnvironmentVariable("ARBITRIUM_REQUEST_ID");
 
                 if (ip == null || portAsStr == null || !ushort.TryParse(portAsStr, out ushort port) || requestId == null)
-                {
+            {
                     throw new Exception("Unable to process Edgegap environment variables.");
-                }
+            }
 
                 NetAddress serverAddress = NetAddress.CreateFromIpPort(ip, port);
                 string roomCode = $"{requestId}.pr.edgegap.net";
@@ -79,7 +79,7 @@ namespace Asteroids.HostSimple
 
         private void SetPlayerData()
         {
-            playerData = FindFirstObjectByType<PlayerData>();
+            playerData = FindObjectOfType<PlayerData>();
             if (playerData == null)
             {
                 playerData = Instantiate(_playerDataPrefab);
@@ -97,7 +97,7 @@ namespace Asteroids.HostSimple
 
         private async void StartGame(GameMode mode, string roomName, string sceneName, NetAddress? serverAddress = null)
         {
-            _runnerInstance = FindFirstObjectByType<NetworkRunner>();
+            _runnerInstance = FindObjectOfType<NetworkRunner>();
             if (_runnerInstance == null)
             {
                 _runnerInstance = Instantiate(_networkRunnerPrefab);

@@ -10,27 +10,27 @@ namespace Fusion.Addons.Physics {
   /// </summary>
   /// <typeparam name="TPhysicsScene"></typeparam>
   public abstract class RunnerSimulatePhysicsBase<TPhysicsScene> : RunnerSimulatePhysicsBase where TPhysicsScene : struct, IEquatable <TPhysicsScene> {
-
+    
     /// <summary>
     /// Wrapper for physics scene reference.
     /// </summary>
     protected struct AdditionalScene {
       public TPhysicsScene PhysicsScene;
-      public ClientPhysicsSimulation ClientPhysicsSimulation;
+      public bool ForwardOnly;
     }
-
+    
     /// <summary>
     /// List of additional physics scenes that should be simulated by Fusion.
     /// </summary>
     protected List<AdditionalScene> _additionalScenes;
-
+    
     /// <summary>
     /// Register a Physics Scene to be simulated by Fusion.
     /// </summary>
     /// <param name="scene">The Physics Scene to include in simulation.</param>
-    /// <param name="clientPhysicsSimulation">Defines physics simulation of the additional scene for clients.
-    /// Typically this will be Disabled (physics not simulated) or SimulateForward (if you want to simulate physics locally for non-networked objects such as rag dolls).</param>
-    public void RegisterAdditionalScene(TPhysicsScene scene, ClientPhysicsSimulation clientPhysicsSimulation = ClientPhysicsSimulation.Disabled) {
+    /// <param name="forwardOnly">Indicate if this additional scene should not resimulate.
+    /// Typically this will be Forward, if you want to simulate physics locally for non-networked objects (such as rag dolls)</param>
+    public void RegisterAdditionalScene(TPhysicsScene scene, bool forwardOnly = false) {
       if (_additionalScenes == null) {
         _additionalScenes = new List<AdditionalScene>();
       } else {
@@ -41,7 +41,7 @@ namespace Fusion.Addons.Physics {
           }
         }
       }
-      _additionalScenes.Add(new AdditionalScene(){PhysicsScene = scene, ClientPhysicsSimulation = clientPhysicsSimulation});
+      _additionalScenes.Add(new AdditionalScene(){PhysicsScene = scene, ForwardOnly = forwardOnly});
     }
 
     /// <summary>
@@ -65,19 +65,6 @@ namespace Fusion.Addons.Physics {
       if (found.HasValue) {
         _additionalScenes.RemoveAt(found.Value);
       }
-    }
-
-    protected override sealed bool AnySceneRequiresSyncTransform() {
-      if (_additionalScenes == null || _additionalScenes.Count == 0) {
-        return false;
-      }
-
-      foreach (var scene in _additionalScenes) {
-        if (RequiresSyncTransform(scene.ClientPhysicsSimulation))
-          return true;
-      }
-
-      return false;
     }
   }
 }

@@ -128,7 +128,7 @@ namespace Asteroids.HostSimple
             Vector3 torque = Random.insideUnitSphere * Random.Range(500.0f, 1500.0f);
 
             var rb = asteroidNetworkObject.GetComponent<Rigidbody>();
-            rb.linearVelocity = Vector3.zero;
+            rb.velocity = Vector3.zero;
             rb.AddForce(force);
             rb.AddTorque(torque);
 
@@ -141,7 +141,7 @@ namespace Asteroids.HostSimple
             Vector3 torque)
         {
             var rb = asteroidNetworkObject.GetComponent<Rigidbody>();
-            rb.linearVelocity = Vector3.zero;
+            rb.velocity = Vector3.zero;
             rb.AddForce(force);
             rb.AddTorque(torque);
 

@@ -58,7 +58,7 @@ namespace Asteroids.HostSimple
         // Spawns a bullet which will be travelling in the direction the spaceship is facing
         private void SpawnBullet()
         {
-            if (_shootCooldown.ExpiredOrNotRunning(Runner) == false || !Runner.CanSpawn) return;
+            if (_shootCooldown.ExpiredOrNotRunning(Runner) == false) return;
 
             Runner.Spawn(_bullet, _rigidbody.position, _rigidbody.rotation, Object.InputAuthority);
 
