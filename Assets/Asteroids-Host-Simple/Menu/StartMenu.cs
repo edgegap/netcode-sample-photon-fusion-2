@@ -36,6 +36,7 @@ namespace Asteroids.HostSimple
         private ushort serverPort = 5050;
         private bool edgegapMatchmaker = false;
         private bool retryStartGame = false;
+        private bool isServer = false;
 
         [SerializeField]
         private string _EdgegapPortMapName = "GAMEPORT";
@@ -44,7 +45,9 @@ namespace Asteroids.HostSimple
 
         private void Start()
         {
-            bool isServer = Application.isBatchMode;
+            EdgegapMatchmakerClientHandler.EdgegapMode = false;
+            UpdateEdgegapConnectStatusTxt("");
+            isServer = Application.isBatchMode;
             _EdgegapStartBtn.interactable = true;
 
             if (isServer)
@@ -53,13 +56,19 @@ namespace Asteroids.HostSimple
                 string portAsStr = Environment.GetEnvironmentVariable($"ARBITRIUM_PORT_{_EdgegapPortMapName}_EXTERNAL");
                 string requestId = Environment.GetEnvironmentVariable("ARBITRIUM_REQUEST_ID");
 
-                if (ip == null || portAsStr == null || !ushort.TryParse(portAsStr, out ushort port) || requestId == null)
-            {
+                if (portAsStr == null)
+                {
+                    throw new Exception($"Could not find port mapping, make sure your app version port name matches with \"{_EdgegapPortMapName}\"");
+                }
+
+                if (ip == null || !ushort.TryParse(portAsStr, out ushort port) || requestId == null)
+                {
                     throw new Exception("Unable to process Edgegap environment variables.");
-            }
+                }
 
                 NetAddress serverAddress = NetAddress.CreateFromIpPort(ip, port);
                 string roomCode = $"{requestId}.pr.edgegap.net";
+                Debug.Log($"Starting server room with code {roomCode}");
                 StartGame(GameMode.Server, roomCode, _gameSceneName, serverAddress);
             }
         }
@@ -128,7 +137,9 @@ namespace Asteroids.HostSimple
             {
                 if (retryStartGame)
                 {
+                    Debug.Log("retrying");
                     retryStartGame = false;
+                    DestroyImmediate(_runnerInstance);
                     StartGame(mode, roomName, sceneName);
                 }
                 else
@@ -144,6 +155,11 @@ namespace Asteroids.HostSimple
             }
             else
             {
+                if (isServer)
+                {
+                    Debug.Log(result.ToString());
+                }
+
                 if (_runnerInstance.IsServer)
                 {
                     await _runnerInstance.LoadScene(sceneName);
@@ -154,6 +170,7 @@ namespace Asteroids.HostSimple
         public void StartEdgegap()
         {
             //edgegapMatchmaker = true;
+            EdgegapMatchmakerClientHandler.EdgegapMode = true;
             retryStartGame = true;
             SetPlayerData();
 

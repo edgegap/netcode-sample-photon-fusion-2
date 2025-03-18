@@ -11,6 +11,7 @@ using MyTicketsRequestDTO = Edgegap.Gen2SDK.SimpleTicketsRequestDTO;
 public class EdgegapMatchmakerClientHandler : MonoBehaviour
 {
     public static EdgegapMatchmakerClientHandler Instance { get; private set; }
+    public static bool EdgegapMode = false;
 
     #region Gen2Client Configuration
     public string BaseUrl;
@@ -166,7 +167,7 @@ public class EdgegapMatchmakerClientHandler : MonoBehaviour
 
     public void OnApplicationQuit()
     {
-        if (!DeleteTicketOnQuit)
+        if (!DeleteTicketOnQuit || Gen2Client is null)
             return;
         StopMatchmaking();
     }
