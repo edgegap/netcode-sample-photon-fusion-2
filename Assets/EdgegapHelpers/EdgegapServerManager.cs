@@ -75,7 +75,7 @@ public class EdgegapServerManager : MonoBehaviour
 
         if (!result.Ok)
         {
-            Debug.LogError($"{result.ErrorMessage}");
+            Debug.LogError($"ERROR while starting session: {result.ErrorMessage}");
         }
         else
         {
