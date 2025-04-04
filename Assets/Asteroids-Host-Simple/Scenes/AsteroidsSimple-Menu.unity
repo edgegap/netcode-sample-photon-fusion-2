@@ -531,7 +531,10 @@ MonoBehaviour:
   _gameSceneName: AsteroidsSimple-Game
   _EdgegapConnectStatus: {fileID: 646237189}
   _EdgegapStartBtn: {fileID: 638978337}
-  _EdgegapPortMapName: GAMEPORT
+  _HostStartBtn: {fileID: 1561501577}
+  _ClientStartBtn: {fileID: 1969785075}
+  _retryJoin: 1
+  _retryAfterSecs: 1.5
 --- !u!1001 &495451559
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2127,66 +2130,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1309378254}
   m_CullTransparentMesh: 1
---- !u!1 &1315009857
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1315009859}
-  - component: {fileID: 1315009860}
-  m_Layer: 0
-  m_Name: EdgegapMatchmakerClientHandler
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1315009859
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1315009857}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 725.73676, y: 157.77393, z: 804.0954}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1315009860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1315009857}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 92af27af047482141bd086824ee86074, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  BaseUrl: https://om-1tf571biz1.edgegap.net
-  AuthToken: '2cfdb50e-ade1-4976-81de-e837c9941b50 '
-  ClientVersion: 1.0.0
-  SaveStateInPlayerPrefs: 0
-  PLAYER_PREFS_KEY_VERSION: EdgegapGen2ClientVersion
-  PLAYER_PREFS_KEY_TICKET: EdgegapGen2ClientTicket
-  PLAYER_PREFS_KEY_ASSIGNMENT: EdgegapGen2ClientAssignment
-  RequestTimeoutSeconds: 3
-  PollingBackoffSeconds: 1
-  MaxConsecutivePollingErrors: 10
-  RemoveAssignmentSeconds: 30
-  DeleteTicketOnPause: 0
-  DeleteTicketOnQuit: 1
-  LogTicketUpdates: 1
-  LogAssignmentUpdates: 1
-  LogPollingUpdates: 0
 --- !u!1001 &1469496112
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2980,5 +2923,4 @@ SceneRoots:
   - {fileID: 495451559}
   - {fileID: 1469496112}
   - {fileID: 42732621}
-  - {fileID: 1315009859}
   - {fileID: 995347636}

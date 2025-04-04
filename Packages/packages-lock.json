@@ -1,14 +1,5 @@
 {
   "dependencies": {
-    "com.edgegap.unity-gen2-sdk": {
-      "version": "https://github.com/edgegap/edgegap-unity-gen2-sdk.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "3.2.1"
-      },
-      "hash": "55d20083943f6762636ae2d3cb03260088d42a97"
-    },
     "com.edgegap.unity-servers-plugin": {
       "version": "https://github.com/edgegap/edgegap-unity-plugin.git#sample/unity-photon-fusion-2",
       "depth": 0,

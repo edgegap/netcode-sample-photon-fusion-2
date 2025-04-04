@@ -1,15 +1,9 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using Fusion;
 using TMPro;
-using UnityEngine.SceneManagement;
-using Fusion.Sockets;
 using System;
-using System.Threading.Tasks;
 using UnityEngine.UI;
-using System.Text.RegularExpressions;
 
 namespace Asteroids.HostSimple
 {
@@ -31,58 +25,44 @@ namespace Asteroids.HostSimple
         [SerializeField] private TextMeshProUGUI _EdgegapConnectStatus = null;
 
         [SerializeField] private Button _EdgegapStartBtn = null;
+        [SerializeField] private Button _HostStartBtn = null;
+        [SerializeField] private Button _ClientStartBtn = null;
 
-        //You can use the value of your choice here
-        private ushort serverPort = 5050;
-        private bool edgegapMatchmaker = false;
-        private bool retryStartGame = false;
-        private bool isServer = false;
-
-        [SerializeField]
-        private string _EdgegapPortMapName = "GAMEPORT";
+        [SerializeField] private bool _retryJoin = true;
+        [SerializeField] private float _retryAfterSecs = 1.5f;
+        private bool _retry;
 
         private NetworkRunner _runnerInstance = null;
 
         private void Start()
         {
-            EdgegapMatchmakerClientHandler.EdgegapMode = false;
-            UpdateEdgegapConnectStatusTxt("");
-            //isServer = Application.isBatchMode;
+            UpdateConnectStatusTxt("");
             _EdgegapStartBtn.interactable = true;
-
-            //if (isServer)
-            //{
-            //    string ip = Environment.GetEnvironmentVariable("ARBITRIUM_PUBLIC_IP");
-            //    string portAsStr = Environment.GetEnvironmentVariable($"ARBITRIUM_PORT_{_EdgegapPortMapName}_EXTERNAL");
-            //    string requestId = Environment.GetEnvironmentVariable("ARBITRIUM_REQUEST_ID");
-
-            //    if (portAsStr == null)
-            //    {
-            //        throw new Exception($"Could not find port mapping, make sure your app version port name matches with \"{_EdgegapPortMapName}\"");
-            //    }
-
-            //    if (ip == null || !ushort.TryParse(portAsStr, out ushort port) || requestId == null)
-            //    {
-            //        throw new Exception("Unable to process Edgegap environment variables.");
-            //    }
-
-            //    NetAddress serverAddress = NetAddress.CreateFromIpPort(ip, port);
-            //    string roomCode = $"{requestId}.pr.edgegap.net";
-            //    Debug.Log($"Starting server room with code {roomCode}");
-            //    StartGame(GameMode.Server, roomCode, _gameSceneName, serverAddress);
-            //}
+            _HostStartBtn.interactable = true;
+            _ClientStartBtn.interactable = true;
+            _retry = _retryJoin;
         }
 
         // Attempts to start a new game session 
         public void StartHost()
         {
+            EdgegapServerManager.EdgegapEnabled = false;
+            _EdgegapStartBtn.interactable = false;
+            _HostStartBtn.interactable = false;
+            _ClientStartBtn.interactable = false;
             SetPlayerData();
+            UpdateConnectStatusTxt($"Attempting to connect to room {_roomName.text} as Host...");
             StartGame(GameMode.AutoHostOrClient, _roomName.text, _gameSceneName);
         }
 
         public void StartClient()
         {
+            EdgegapServerManager.EdgegapEnabled = false;
+            _EdgegapStartBtn.interactable = false;
+            _HostStartBtn.interactable = false;
+            _ClientStartBtn.interactable = false;
             SetPlayerData();
+            UpdateConnectStatusTxt($"Attempting to connect to room {_roomName.text} as Client...");
             StartGame(GameMode.Client, _roomName.text, _gameSceneName);
         }
 
@@ -104,10 +84,8 @@ namespace Asteroids.HostSimple
             }
         }
 
-        private async void StartGame(GameMode mode, string roomName, string sceneName, NetAddress? serverAddress = null)
+        private async void StartGame(GameMode mode, string roomName, string sceneName)
         {
-            UpdateEdgegapConnectStatusTxt($"Attempting to connect to room {roomName} via Edgegap...");
-
             _runnerInstance = FindObjectOfType<NetworkRunner>();
             if (_runnerInstance == null)
             {
@@ -124,41 +102,32 @@ namespace Asteroids.HostSimple
                 ObjectProvider = _runnerInstance.GetComponent<NetworkObjectPoolDefault>(),
             };
 
-            if (mode == GameMode.Server && serverAddress != null)
-            {
-                Debug.Log("Using specific address " + serverAddress);
-                startGameArgs.Address = NetAddress.Any(serverPort);
-                startGameArgs.CustomPublicAddress = serverAddress;
-            }
-
             // GameMode.Host = Start a session with a specific name
             // GameMode.Client = Join a session with a specific name
             var result = await _runnerInstance.StartGame(startGameArgs);
 
             if (!result.Ok)
             {
-                if (retryStartGame)
+                if (_retry)
                 {
-                    Debug.Log("retrying");
-                    Debug.Log(result.ToString());
-                    //retryStartGame = false;
-                    DestroyImmediate(_runnerInstance);
-                    StartGame(mode, roomName, sceneName);
+                    _retry = false;
+                    Destroy(_runnerInstance);
+                    var retryAfterDelay = RunAfterTime(_retryAfterSecs, () => StartGame(mode, roomName, sceneName));
+                    StartCoroutine(retryAfterDelay);
                 }
                 else
                 {
-                    UpdateEdgegapConnectStatusTxt($"Unable to join room {roomName} due to {result.ShutdownReason}, see logs.");
+                    UpdateConnectStatusTxt($"Unable to join room {roomName} due to {result.ShutdownReason}, see logs.");
                     Debug.LogError($"{result.ErrorMessage}");
-
-                    if (edgegapMatchmaker)
-                    {
-                        EdgegapMatchmakerClientHandler.Instance.StopMatchmaking();
-                    }
+                    _EdgegapStartBtn.interactable = true;
+                    _HostStartBtn.interactable = true;
+                    _ClientStartBtn.interactable = true;
+                    _retry = _retryJoin;
                 }
             }
             else
             {
-                UpdateEdgegapConnectStatusTxt("Starting game...");
+                UpdateConnectStatusTxt("Starting game...");
 
                 if (_runnerInstance.IsServer)
                 {
@@ -169,19 +138,24 @@ namespace Asteroids.HostSimple
 
         public void StartEdgegap()
         {
-            //edgegapMatchmaker = true;
-            EdgegapMatchmakerClientHandler.EdgegapMode = true;
-            retryStartGame = true;
+            EdgegapServerManager.EdgegapEnabled = true;
+            _EdgegapStartBtn.interactable = false;
+            _HostStartBtn.interactable = false;
+            _ClientStartBtn.interactable = false;
             SetPlayerData();
-
-            //test
+            UpdateConnectStatusTxt($"Attempting to connect to room {_roomName.text} via Edgegap...");
             StartGame(GameMode.Client, _roomName.text, _gameSceneName);
-            //EdgegapMatchmakerClientHandler.Instance.InitialiseClient(StartGame, UpdateEdgegapConnectStatusTxt);
         }
 
-        private void UpdateEdgegapConnectStatusTxt(string msg)
+        private void UpdateConnectStatusTxt(string msg)
         {
             _EdgegapConnectStatus.text = msg;
+        }
+
+        private IEnumerator RunAfterTime(float timeInSeconds, Action action)
+        {
+            yield return new WaitForSeconds(timeInSeconds);
+            action();
         }
     }
 }

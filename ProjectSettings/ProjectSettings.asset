@@ -631,7 +631,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Server: FUSION_WEAVER;FUSION2;EDGEGAP_PLUGIN_SERVERS
+    Server: FUSION_WEAVER;FUSION2;EDGEGAP_PLUGIN_SERVERS;EDGEGAP_PLUGIN_SERVERS
     Standalone: FUSION_WEAVER;FUSION2;FUSION_LOGLEVEL_INFO;EDGEGAP_PLUGIN_SERVERS
   additionalCompilerArguments: {}
   platformArchitecture: {}

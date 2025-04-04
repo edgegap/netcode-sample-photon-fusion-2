@@ -2,19 +2,16 @@ using Asteroids.HostSimple;
 using Fusion;
 using Fusion.Sockets;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class EdgegapServerManager : MonoBehaviour
 {
     public static EdgegapServerManager Instance { get; private set; }
+    public static bool EdgegapEnabled = true;
     private NetworkRunner _runnerInstance = null;
-    private bool _gameStarted = false;
-    private bool _isServer = false;
     [SerializeField] private NetworkRunner _networkRunnerPrefab = null;
     [SerializeField] private string _gameSceneName = null;
-    [SerializeField] private string _EdgegapPortMapName = "GAMEPORT";
+    [SerializeField] private string _EdgegapPortMapName = "gameport";
     [SerializeField] private ushort _serverPort = 5050;
 
     public void Awake()
@@ -26,14 +23,13 @@ public class EdgegapServerManager : MonoBehaviour
         else
         {
             Instance = this;
+            DontDestroyOnLoad(this);
         }
     }
 
     void Start()
     {
-        _isServer = Application.isBatchMode;
-
-        if (_isServer && !_gameStarted)
+        if (Application.isBatchMode)
         {
             string ip = Environment.GetEnvironmentVariable("ARBITRIUM_PUBLIC_IP");
             string portAsStr = Environment.GetEnvironmentVariable($"ARBITRIUM_PORT_{_EdgegapPortMapName.ToUpper()}_EXTERNAL");
@@ -50,13 +46,9 @@ public class EdgegapServerManager : MonoBehaviour
             }
 
             NetAddress serverAddress = NetAddress.CreateFromIpPort(ip, port);
-            //string roomCode = $"{requestId}.pr.edgegap.net";
-            Debug.Log($"Starting server room with code {requestId}");
-            StartServer(requestId, _gameSceneName, serverAddress);
-        }
-        else
-        {
-            Debug.Log($"Game started previously: {_gameStarted}");
+            string roomCode = $"{requestId}.pr.edgegap.net";
+            Debug.Log($"Starting server room with code {roomCode}");
+            StartServer(roomCode, _gameSceneName, serverAddress);
         }
     }
 
@@ -89,7 +81,6 @@ public class EdgegapServerManager : MonoBehaviour
         {
             if (_runnerInstance.IsServer)
             {
-                _gameStarted = true;
                 await _runnerInstance.LoadScene(sceneName);
             }
         }
