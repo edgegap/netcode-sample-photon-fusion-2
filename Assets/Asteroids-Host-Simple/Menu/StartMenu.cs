@@ -68,7 +68,7 @@ namespace Asteroids.HostSimple
 
         private void SetPlayerData()
         {
-            playerData = FindObjectOfType<PlayerData>();
+            playerData = FindFirstObjectByType<PlayerData>();
             if (playerData == null)
             {
                 playerData = Instantiate(_playerDataPrefab);
