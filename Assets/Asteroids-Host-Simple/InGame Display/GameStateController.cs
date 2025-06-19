@@ -96,8 +96,8 @@ namespace Asteroids.HostSimple
             if (_timer.ExpiredOrNotRunning(Runner) == false) return;
 
             // Starts the Spaceship and Asteroids spawners once the game start delay has expired
-            FindObjectOfType<SpaceshipSpawner>().StartSpaceshipSpawner(this);
-            FindObjectOfType<AsteroidSpawner>().StartAsteroidSpawner();
+            FindFirstObjectByType<SpaceshipSpawner>().StartSpaceshipSpawner(this);
+            FindFirstObjectByType<AsteroidSpawner>().StartAsteroidSpawner();
 
             // Switches to the Running GameState and sets the time to the length of a game session
             _gameState = GameState.Running;

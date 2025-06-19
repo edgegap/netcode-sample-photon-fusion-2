@@ -27,7 +27,7 @@ namespace Fusion
 
     private void OnDrawGizmos()
     {
-      if (_runner == null || _runner.IsRunning == false || _runner.GetVisible() == false || _runner.LagCompensation.DrawInfo == default) return;
+      if (_runner == null || _runner.IsRunning == false || _runner.GetVisible() == false || _runner.LagCompensation?.DrawInfo == default) return;
 
       if (DrawBroadphaseNodes)
       {
@@ -55,7 +55,7 @@ namespace Fusion
               Gizmos.DrawWireSphere(colliderDrawInfo.Offset, colliderDrawInfo.Radius);
               break;
             case HitboxTypes.Capsule:
-              LagCompensationDraw.GizmosDrawWireCapsule(Vector3.up * colliderDrawInfo.CapsuleHeight, Vector3.down * colliderDrawInfo.CapsuleHeight, colliderDrawInfo.Radius);
+              LagCompensationDraw.GizmosDrawWireCapsule(colliderDrawInfo.CapsuleTopCenter, colliderDrawInfo.CapsuleBottomCenter, colliderDrawInfo.Radius);
               break;
             default:
               Debug.LogWarning($"HitboxType {colliderDrawInfo.Type} not supported to draw.");

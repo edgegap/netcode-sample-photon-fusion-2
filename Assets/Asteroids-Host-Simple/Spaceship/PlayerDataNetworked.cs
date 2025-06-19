@@ -36,7 +36,7 @@ namespace Asteroids.HostSimple
             // Find the local non-networked PlayerData to read the data and communicate it to the Host via a single RPC 
             if (Object.HasInputAuthority)
             {
-                var nickName = FindObjectOfType<PlayerData>().GetNickName();
+                var nickName = FindFirstObjectByType<PlayerData>().GetNickName();
                 RpcSetNickName(nickName);
             }
 
@@ -50,7 +50,7 @@ namespace Asteroids.HostSimple
 
             // --- Host & Client
             // Set the local runtime references.
-            _overviewPanel = FindObjectOfType<PlayerOverviewPanel>();
+            _overviewPanel = FindFirstObjectByType<PlayerOverviewPanel>();
             // Add an entry to the local Overview panel with the information of this spaceship
             _overviewPanel.AddEntry(Object.InputAuthority, this);
             

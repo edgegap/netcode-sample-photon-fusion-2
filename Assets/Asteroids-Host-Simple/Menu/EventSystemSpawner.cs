@@ -12,7 +12,7 @@ namespace Asteroids.HostSimple
     {
         void OnEnable()
         {
-            EventSystem sceneEventSystem = FindObjectOfType<EventSystem>();
+            EventSystem sceneEventSystem = FindFirstObjectByType<EventSystem>();
             if (sceneEventSystem == null)
             {
                 GameObject eventSystem = new GameObject("EventSystem");

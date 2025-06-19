@@ -60,7 +60,7 @@ namespace Asteroids.HostSimple
                 // Big asteroids tell the AsteroidSpawner to spawn multiple small asteroids as it breaks up.
                 if (IsBig)
                 {
-                    FindObjectOfType<AsteroidSpawner>().BreakUpBigAsteroid(transform.position);
+                    FindFirstObjectByType<AsteroidSpawner>().BreakUpBigAsteroid(transform.position);
                 }
 
                 Runner.Despawn(Object);

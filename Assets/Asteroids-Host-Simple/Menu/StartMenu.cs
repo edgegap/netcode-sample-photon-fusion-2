@@ -1,15 +1,9 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using Fusion;
 using TMPro;
-using UnityEngine.SceneManagement;
-using Fusion.Sockets;
 using System;
-using System.Threading.Tasks;
 using UnityEngine.UI;
-using System.Text.RegularExpressions;
 
 namespace Asteroids.HostSimple
 {
@@ -31,83 +25,50 @@ namespace Asteroids.HostSimple
         [SerializeField] private TextMeshProUGUI _EdgegapConnectStatus = null;
 
         [SerializeField] private Button _EdgegapStartBtn = null;
-        
-        private bool startDeploy = false;
-        private bool tryJoinEdgegap = false;
-        bool waiting = false;
+        [SerializeField] private Button _HostStartBtn = null;
+        [SerializeField] private Button _ClientStartBtn = null;
 
-        //You can use the value of your choice here
-        private ushort serverPort = 5050;
+        [SerializeField] private bool _retryJoin = true;
+        [SerializeField] private float _retryAfterSecs = 1.5f;
+        private bool _retry;
 
         private NetworkRunner _runnerInstance = null;
 
         private void Start()
         {
-            _roomName.onValueChanged.AddListener(ValidateRoomName);
-            _EdgegapStartBtn.interactable = false;
-            _nickName.onValueChanged.AddListener(value => CheckForSpecialcharacters(value, _nickName));
-            _EdgegapConnectStatus.text = "Please enter a room name to test with Edgegap.";
-            EdgegapManager.EdgegapPreServerMode = false;
-            waiting = false;
-
-            if (EdgegapManager.IsServer())
-            {
-                var getPortAndStartServer = EdgegapAPIInterface.GetPublicIpAndPortFromServer((ip, port) =>
-                {
-                    var serverAddress = NetAddress.CreateFromIpPort(ip, port);
-                    StartGame(GameMode.Server, EdgegapManager.EdgegapRoomCode, _gameSceneName, serverAddress);
-                });
-
-                StartCoroutine(getPortAndStartServer);
-            }
-        }
-
-        private void Update()
-        {
-            if (EdgegapManager.EdgegapPreServerMode && EdgegapManager.TransferingToEdgegapServer)
-            {
-                // launch game again with edgegap server room code
-                _EdgegapConnectStatus.text = "Deployment ready, attempting to connect...";
-                startDeploy = false;
-
-                var launchAfterDelay = RunAfterTime(0.5f, () => TryConnectDeployment(EdgegapManager.EdgegapRoomCode, _gameSceneName));
-                StartCoroutine(launchAfterDelay);
-            }
-            else if(tryJoinEdgegap)
-            {
-                tryJoinEdgegap = false;
-
-                _EdgegapConnectStatus.text = $"Attempting to connect to room {_roomName.text} with Edgegap...";
-
-                StartGame(GameMode.Client, _roomName.text, _gameSceneName);
-            }
-            else if (startDeploy && playerData.GetIpAddress() is not null)
-            {
-                startDeploy = false;
-
-                _EdgegapConnectStatus.text = $"Room {_roomName.text} not found, deploying Edgegap server...";
-
-                string[] ips = { playerData.GetIpAddress() };
-                StartCoroutine(EdgegapManager.Instance.Deploy(_roomName.text, ips, OnEdgegapServerReady));
-            }
+            UpdateConnectStatusTxt("");
+            _EdgegapStartBtn.interactable = true;
+            _HostStartBtn.interactable = true;
+            _ClientStartBtn.interactable = true;
+            _retry = _retryJoin;
         }
 
         // Attempts to start a new game session 
         public void StartHost()
         {
+            EdgegapServerManager.EdgegapEnabled = false;
+            _EdgegapStartBtn.interactable = false;
+            _HostStartBtn.interactable = false;
+            _ClientStartBtn.interactable = false;
             SetPlayerData();
+            UpdateConnectStatusTxt($"Attempting to connect to room {_roomName.text} as Host...");
             StartGame(GameMode.AutoHostOrClient, _roomName.text, _gameSceneName);
         }
 
         public void StartClient()
         {
+            EdgegapServerManager.EdgegapEnabled = false;
+            _EdgegapStartBtn.interactable = false;
+            _HostStartBtn.interactable = false;
+            _ClientStartBtn.interactable = false;
             SetPlayerData();
+            UpdateConnectStatusTxt($"Attempting to connect to room {_roomName.text} as Client...");
             StartGame(GameMode.Client, _roomName.text, _gameSceneName);
         }
 
         private void SetPlayerData()
         {
-            playerData = FindObjectOfType<PlayerData>();
+            playerData = FindFirstObjectByType<PlayerData>();
             if (playerData == null)
             {
                 playerData = Instantiate(_playerDataPrefab);
@@ -121,17 +82,11 @@ namespace Asteroids.HostSimple
             {
                 playerData.SetNickName(_nickName.text);
             }
-
-            if (EdgegapManager.EdgegapPreServerMode)
-            {
-                var crtn = EdgegapManager.Instance.GetPublicIpAddress(ip => playerData.SetIpAddress(ip));
-                StartCoroutine(crtn);
-            }
         }
 
-        private async void StartGame(GameMode mode, string roomName, string sceneName, NetAddress? serverAddress = null)
+        private async void StartGame(GameMode mode, string roomName, string sceneName)
         {
-            _runnerInstance = FindObjectOfType<NetworkRunner>();
+            _runnerInstance = FindFirstObjectByType<NetworkRunner>();
             if (_runnerInstance == null)
             {
                 _runnerInstance = Instantiate(_networkRunnerPrefab);
@@ -147,24 +102,32 @@ namespace Asteroids.HostSimple
                 ObjectProvider = _runnerInstance.GetComponent<NetworkObjectPoolDefault>(),
             };
 
-            if (mode == GameMode.Server && serverAddress != null)
-            {
-                Debug.Log("Using specific address " + serverAddress);
-                startGameArgs.Address = NetAddress.Any(serverPort);
-                startGameArgs.CustomPublicAddress = serverAddress;
-            }
-
             // GameMode.Host = Start a session with a specific name
             // GameMode.Client = Join a session with a specific name
             var result = await _runnerInstance.StartGame(startGameArgs);
 
-            if (!result.Ok && EdgegapManager.EdgegapPreServerMode)
+            if (!result.Ok)
             {
-                startDeploy = true;
+                if (_retry)
+                {
+                    _retry = false;
+                    Destroy(_runnerInstance);
+                    var retryAfterDelay = RunAfterTime(_retryAfterSecs, () => StartGame(mode, roomName, sceneName));
+                    StartCoroutine(retryAfterDelay);
+                }
+                else
+                {
+                    UpdateConnectStatusTxt($"Unable to join room {roomName} due to {result.ShutdownReason}, see logs.");
+                    Debug.LogError($"{result.ErrorMessage}");
+                    _EdgegapStartBtn.interactable = true;
+                    _HostStartBtn.interactable = true;
+                    _ClientStartBtn.interactable = true;
+                    _retry = _retryJoin;
+                }
             }
             else
             {
-                startDeploy = false;
+                UpdateConnectStatusTxt("Starting game...");
 
                 if (_runnerInstance.IsServer)
                 {
@@ -175,88 +138,24 @@ namespace Asteroids.HostSimple
 
         public void StartEdgegap()
         {
-            EdgegapManager.EdgegapPreServerMode = true;
+            EdgegapServerManager.EdgegapEnabled = true;
+            _EdgegapStartBtn.interactable = false;
+            _HostStartBtn.interactable = false;
+            _ClientStartBtn.interactable = false;
             SetPlayerData();
-            tryJoinEdgegap = true;
+            UpdateConnectStatusTxt($"Attempting to connect to room {_roomName.text} via Edgegap...");
+            StartGame(GameMode.Client, _roomName.text, _gameSceneName);
         }
 
-        public void OnEdgegapServerReady(string roomCode)
+        private void UpdateConnectStatusTxt(string msg)
         {
-            EdgegapManager.EdgegapRoomCode = roomCode;
-            EdgegapManager.TransferingToEdgegapServer = true;
+            _EdgegapConnectStatus.text = msg;
         }
 
-        IEnumerator RunAfterTime(float timeInSeconds, Action action)
+        private IEnumerator RunAfterTime(float timeInSeconds, Action action)
         {
-            if (!waiting)
-            {
-                waiting = true;
-                yield return new WaitForSeconds(timeInSeconds);
-                action();
-            }     
-        }
-
-        private async void TryConnectDeployment(string roomName, string sceneName)
-        {
-            Debug.Log("Attempting to connect...");
-
-            _runnerInstance = FindObjectOfType<NetworkRunner>();
-            if (_runnerInstance == null)
-            {
-                _runnerInstance = Instantiate(_networkRunnerPrefab);
-            }
-            _runnerInstance.ProvideInput = true;
-
-            var startGameArgs = new StartGameArgs()
-            {
-                GameMode = GameMode.Client,
-                SessionName = roomName,
-                ObjectProvider = _runnerInstance.GetComponent<NetworkObjectPoolDefault>(),
-            };
-
-            var result = await _runnerInstance.StartGame(startGameArgs);
-                
-            if (!result.Ok)
-            {
-                waiting = false;
-                return;
-            }
-            else
-            {
-                _EdgegapConnectStatus.text = "Game starting...";
-                EdgegapManager.TransferingToEdgegapServer = false;
-            }
-
-            if (_runnerInstance.IsServer)
-            {
-                await _runnerInstance.LoadScene(sceneName);
-            }
-        }
-
-        private void ValidateRoomName(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                _EdgegapStartBtn.interactable = false;
-                _EdgegapConnectStatus.text = "Please enter a room name to test with Edgegap.";
-            }
-            else
-            {
-                _EdgegapStartBtn.interactable = true;
-                _EdgegapConnectStatus.text = "";
-
-                CheckForSpecialcharacters(value, _roomName);
-            }
-        }
-
-        private void CheckForSpecialcharacters(string value, TMP_InputField textfield)
-        {
-            string newValue = Regex.Replace(value, @"[^0-9a-zA-Z]", string.Empty);
-            if (value != newValue)
-            {
-                Debug.Log("Please do not use special characters in room name or player name.");
-                textfield.text = newValue;
-            }
+            yield return new WaitForSeconds(timeInSeconds);
+            action();
         }
     }
 }

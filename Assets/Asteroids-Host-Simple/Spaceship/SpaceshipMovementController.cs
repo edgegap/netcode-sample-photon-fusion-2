@@ -66,9 +66,9 @@ namespace Asteroids.HostSimple
             Vector3 force = (rot * Vector3.forward) * input.VerticalInput * _movementSpeed * Runner.DeltaTime;
             _rigidbody.AddForce(force);
 
-            if (_rigidbody.velocity.magnitude > _maxSpeed)
+            if (_rigidbody.linearVelocity.magnitude > _maxSpeed)
             {
-                _rigidbody.velocity = _rigidbody.velocity.normalized * _maxSpeed;
+                _rigidbody.linearVelocity = _rigidbody.linearVelocity.normalized * _maxSpeed;
             }
         }
 
