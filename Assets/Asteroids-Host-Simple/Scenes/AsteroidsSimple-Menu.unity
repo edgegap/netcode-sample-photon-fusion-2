@@ -1710,7 +1710,7 @@ MonoBehaviour:
   _networkRunnerPrefab: {fileID: 4348269882062334018, guid: e21f28fb1a0a4b84ebf2433f38f6c922, type: 3}
   _gameSceneName: AsteroidsSimple-Game
   _EdgegapPortMapName: GAMEPORT
-  _serverPort: 5050
+  _serverPort: 7777
 --- !u!4 &995347636
 Transform:
   m_ObjectHideFlags: 0

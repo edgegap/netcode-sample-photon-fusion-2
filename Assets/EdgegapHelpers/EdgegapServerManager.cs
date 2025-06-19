@@ -11,8 +11,7 @@ public class EdgegapServerManager : MonoBehaviour
     private NetworkRunner _runnerInstance = null;
     [SerializeField] private NetworkRunner _networkRunnerPrefab = null;
     [SerializeField] private string _gameSceneName = null;
-    [SerializeField] private string _portMapName = "gameport";
-    [SerializeField] private ushort _serverPort = 5050;
+    [SerializeField] private ushort _serverPort = 7777;
 
     public void Awake()
     {
@@ -32,12 +31,14 @@ public class EdgegapServerManager : MonoBehaviour
         if (Application.isBatchMode)
         {
             string ip = Environment.GetEnvironmentVariable("ARBITRIUM_PUBLIC_IP");
-            string portAsStr = Environment.GetEnvironmentVariable($"ARBITRIUM_PORT_{_portMapName.ToUpper()}_EXTERNAL");
+            string portAsStr = Environment.GetEnvironmentVariable("ARBITRIUM_PORT_GAMEPORT_EXTERNAL");
             string requestId = Environment.GetEnvironmentVariable("ARBITRIUM_REQUEST_ID");
 
             if (portAsStr == null)
             {
-                throw new Exception($"Could not find port mapping, make sure your app version port name matches with \"{_portMapName}\"");
+                throw new Exception(
+                    "Could not find port mapping, make sure your app version port name is `gameport`"
+                );
             }
 
             if (ip == null || !ushort.TryParse(portAsStr, out ushort port) || requestId == null)
@@ -54,7 +55,8 @@ public class EdgegapServerManager : MonoBehaviour
 
     private async void StartServer(string roomName, string sceneName, NetAddress serverAddress)
     {
-        _runnerInstance = FindObjectOfType<NetworkRunner>();
+        _runnerInstance = FindFirstObjectByType<NetworkRunner>();
+
         if (_runnerInstance == null)
         {
             _runnerInstance = Instantiate(_networkRunnerPrefab);

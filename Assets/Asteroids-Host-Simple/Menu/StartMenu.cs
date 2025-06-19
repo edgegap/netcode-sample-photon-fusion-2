@@ -86,7 +86,7 @@ namespace Asteroids.HostSimple
 
         private async void StartGame(GameMode mode, string roomName, string sceneName)
         {
-            _runnerInstance = FindObjectOfType<NetworkRunner>();
+            _runnerInstance = FindFirstObjectByType<NetworkRunner>();
             if (_runnerInstance == null)
             {
                 _runnerInstance = Instantiate(_networkRunnerPrefab);
