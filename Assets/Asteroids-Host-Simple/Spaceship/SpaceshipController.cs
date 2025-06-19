@@ -141,7 +141,7 @@ namespace Asteroids.HostSimple
         // Resets the spaceships movement velocity
         private void ResetShip()
         {
-            _rigidbody.velocity = Vector3.zero;
+            _rigidbody.linearVelocity = Vector3.zero;
             _rigidbody.angularVelocity = Vector3.zero;
         }
     }

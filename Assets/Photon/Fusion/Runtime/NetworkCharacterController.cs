@@ -110,6 +110,11 @@ namespace Fusion {
     public override void Spawned() {
       _initial = default;
       TryGetComponent(out _controller);
+      // Without disabling and re-enabling the CharacterController here, the first Move call will reset the position to 0,0,0 instead of
+      // keeping the position it was spawned at. Presumably disabling it clears some kind of internally cached "previous position" value
+      _controller.enabled = false;
+      _controller.enabled = true;
+      CopyToBuffer();
     }
 
     public override void Render() {

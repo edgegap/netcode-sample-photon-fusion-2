@@ -1,13 +1,12 @@
-
 using UnityEngine;
 
 namespace Fusion.Addons.Physics {
   /// <summary>
-  /// Fusion component for handling Physics2D.Simulate(). 
+  /// Fusion component for handling Physics2D.Simulate().
   /// </summary>
   [DisallowMultipleComponent]
   public class RunnerSimulatePhysics2D : RunnerSimulatePhysicsBase<PhysicsScene2D> {
-    
+
     /// <inheritdoc/>
     protected override void OverrideAutoSimulate(bool set) {
       _physicsAutoSimRestore = (PhysicsTimings)Physics2D.simulationMode;
@@ -44,13 +43,13 @@ namespace Fusion.Addons.Physics {
     }
 
     /// <inheritdoc/>
-    protected override void SimulateAdditionalScenes(float deltaTime, bool isForward) {
+    protected override void SimulateAdditionalScenes(float deltaTime, bool checkPhysicsSimulation) {
       if (_additionalScenes == null || _additionalScenes.Count == 0) {
         return;
       }
       var defaultPhysicsScene = Physics2D.defaultPhysicsScene;
       foreach (var scene in _additionalScenes) {
-        if (!scene.ForwardOnly || isForward) {
+        if (!checkPhysicsSimulation || CanSimulatePhysics(scene.ClientPhysicsSimulation)) {
           if (scene.PhysicsScene != defaultPhysicsScene || Physics2D.simulationMode == SimulationMode2D.Script) {
             scene.PhysicsScene.Simulate(deltaTime);
           }

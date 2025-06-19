@@ -42,12 +42,22 @@ namespace Fusion {
     /// <summary>
     /// At runtime startup, this adds a <see cref="RunnerVisibilityLink"/> for each component reference to this GameObject.
     /// </summary>
-    internal void AddNodes() {
-      for(int i = 0, cnt = Components.Length; i <  cnt; ++i) {
-        var node = gameObject.AddComponent<RunnerVisibilityLink>();
+    internal void AddNodes(List<RunnerVisibilityLink> existingNodes) {
+      for(int i = 0; i < Components.Length; ++i) {
+        var found = false;
+        foreach (var existingNode in existingNodes) {
+          if (existingNode.Component == Components[i]) {
+            found = true;
+            break;
+          }
+        }
+        
+        if (found) continue;
+        var node = Components[i].gameObject.AddComponent<RunnerVisibilityLink>();
         node.Guid = _guid + i;
         node.Component = Components[i];
-        node.PreferredRunner = PreferredRunner;
+        node.SetupOnSingleRunnerLink(PreferredRunner);
+        existingNodes.Add(node);
       }
     }
 

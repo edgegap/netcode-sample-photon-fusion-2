@@ -10,7 +10,8 @@ namespace Fusion.Editor {
   [CustomEditor(typeof(NetworkProjectConfigImporter))]
   internal class NetworkProjectConfigImporterEditor : ScriptedImporterEditor {
 
-    private Exception _initializeException;
+    private Exception         _initializeException;
+    private LogSettingsDrawer _logSettingsDrawer;
 
     private static bool _versionExpanded;
     private static string _version;
@@ -22,6 +23,8 @@ namespace Fusion.Editor {
 
     public override void OnInspectorGUI() {
 
+      bool rebuildPrefabTable = false;
+      
       try {
         if (_initializeException != null) {
           EditorGUILayout.HelpBox(_initializeException.ToString(), MessageType.Error, true);
@@ -33,10 +36,7 @@ namespace Fusion.Editor {
           VersionInfoGUI();
 
           using (new EditorGUI.DisabledScope(HasModified())) {
-            if (GUILayout.Button("Rebuild Prefab Table")) {
-              NetworkProjectConfigUtilities.RebuildPrefabTable();
-              GUIUtility.ExitGUI();
-            }
+            rebuildPrefabTable = GUILayout.Button("Rebuild Prefab Table");
           }
 
           extraDataSerializedObject.Update();
@@ -46,18 +46,23 @@ namespace Fusion.Editor {
           EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(NetworkProjectConfigImporter.PrefabOptions)));
           
           EditorGUILayout.Space();
-
+          EditorGUILayout.LabelField("Log", EditorStyles.boldLabel);
+          _logSettingsDrawer.DrawLayout(this, true);
+          
           EditorGUILayout.Space();
           EditorGUILayout.LabelField("Auto-Generated", EditorStyles.boldLabel);
 
           if (GUILayout.Button("Show Network Prefabs Inspector")) {
             NetworkPrefabsInspector.ShowWindow();
           }
-
+          
           // WORKAROUND: during initial failed imports, this may be an instance of UnityEngine.DefaultAsset instead of the actual asset
           if (assetSerializedObject?.targetObject.GetType() == typeof(NetworkProjectConfigAsset)) {
-            EditorGUILayout.PropertyField(assetSerializedObject.FindPropertyOrThrow(nameof(NetworkProjectConfigAsset.Prefabs)));
-            EditorGUILayout.PropertyField(assetSerializedObject.FindPropertyOrThrow(nameof(NetworkProjectConfigAsset.BehaviourMeta)));  
+            // this has the tendency to overwrite the global enabled flag, so let's make sure it's reset once the scope exists
+            using (new FusionEditorGUI.EnabledScope(GUI.enabled)) {
+              EditorGUILayout.PropertyField(assetSerializedObject.FindPropertyOrThrow(nameof(NetworkProjectConfigAsset.Prefabs)));
+              EditorGUILayout.PropertyField(assetSerializedObject.FindPropertyOrThrow(nameof(NetworkProjectConfigAsset.BehaviourMeta)));
+            }
           } else {
             EditorGUILayout.HelpBox("Asset failed to deserialize correctly. Please reimport.", MessageType.Warning);
           }
@@ -65,24 +70,27 @@ namespace Fusion.Editor {
       } finally {
         ApplyRevertGUI();
       }
+      
+      if (rebuildPrefabTable) {
+        NetworkProjectConfigUtilities.RebuildPrefabTable();
+      }
     }
 
     private static void VersionInfoGUI() {
-      if (_allVersionInfo == null || _allVersionInfo == "") {
-        var asms = System.AppDomain.CurrentDomain.GetAssemblies();
-        for (int i = 0; i < asms.Length; ++i) {
-          var asm = asms[i];
-          var asmname = asm.FullName;
-          if (asmname.StartsWith("Fusion.Runtime,")) {
-            _version = NetworkRunner.BuildType + ": " + System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location).ProductVersion;
+      if (string.IsNullOrEmpty(_allVersionInfo)) {
+        var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+        foreach (var asm in assemblies) {
+          var assemblyFullName = asm.FullName;
+          if (assemblyFullName.StartsWith("Fusion.Runtime,")) {
+            _version = $"{NetworkRunner.BuildType}: {System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location).ProductVersion}";
           }
-          if (asmname.StartsWith("Fusion.") || asmname.StartsWith("Fusion,")) {
-            string fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location).ToString();
-            _allVersionInfo += asmname.Substring(0, asmname.IndexOf(",")) + ": " + fvi + " " + "\n";
+
+          if (assemblyFullName.StartsWith("Fusion.") || assemblyFullName.StartsWith("Fusion,")) {
+            var fileVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location).ToString();
+            _allVersionInfo += $"{assemblyFullName.Substring(0, assemblyFullName.IndexOf(",", StringComparison.Ordinal))}: {fileVersion} \n";
           }
         }
       }
-
 
       var r = EditorGUILayout.GetControlRect();
       _versionExpanded = EditorGUI.Foldout(r, _versionExpanded, "");
