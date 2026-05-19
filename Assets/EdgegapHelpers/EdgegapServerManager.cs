@@ -68,7 +68,6 @@ public class EdgegapServerManager : MonoBehaviour
         {
             GameMode = GameMode.Server,
             SessionName = roomName,
-            ObjectProvider = _runnerInstance.GetComponent<NetworkObjectPoolDefault>(),
             Address = NetAddress.Any(_serverPort),
             CustomPublicAddress = serverAddress,
         };
